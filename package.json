@@ -31,6 +31,10 @@
       "umd": "./dist/index.umd.js"
     }
   },
+  "scripts": {
+    "build": "rollup -c",
+    "prepare": "npm run build"
+  },
   "dependencies": {
     "chart.js": "^4.5.1"
   },
