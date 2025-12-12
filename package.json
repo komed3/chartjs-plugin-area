@@ -3,6 +3,9 @@
     "chart.js": "^4.5.1"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-typescript": "^12.3.0",
     "rollup": "^4.53.3",
     "typescript": "^5.9.3"
   }
