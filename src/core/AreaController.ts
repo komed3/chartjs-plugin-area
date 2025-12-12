@@ -1,4 +1,5 @@
 import { DatasetController, registry } from 'chart.js';
+import { ColorUtils } from './ColorUtils';
 
 export class AreaController extends DatasetController {
 
