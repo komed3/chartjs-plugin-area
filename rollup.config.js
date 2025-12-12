@@ -1,6 +1,9 @@
-import typescript from '@rollup/plugin-typescript';
-import resolve from '@rollup/plugin-node-resolve';
+import cleanup from 'rollup-plugin-cleanup';
 import commonjs from '@rollup/plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
+import prettier from 'rollup-plugin-prettier';
+import terser from '@rollup/plugin-terser';
+import typescript from '@rollup/plugin-typescript';
 
 export default {
     input: 'src/index.ts',
@@ -17,9 +20,39 @@ export default {
         globals: {
             'chart.js': 'Chart'
         }
+    }, {
+        file: 'dist/index.umd.min.js',
+        format: 'umd',
+        sourcemap: true,
+        name: 'AreaChartController',
+        globals: {
+            'chart.js': 'Chart'
+        },
+        plugins: [
+            terser( {
+                format: { comments: false },
+                compress: { passes: 6 }
+            } )
+        ]
     } ],
     plugins: [
-        resolve(), commonjs(),
-        typescript( { tsconfig: './tsconfig.json' } )
+        cleanup( {
+            comments: 'istanbul'
+        } ),
+        commonjs(),
+        resolve(),
+        typescript( {
+            tsconfig: './tsconfig.json'
+        } ),
+        prettier( {
+            parser: 'babel',
+            tabWidth: 2,
+            bracketSpacing: true,
+            bracketSameLine: true,
+            singleQuote: true,
+            jsxSingleQuote: true,
+            trailingComma: 'none',
+            objectWrap: 'collapse'
+        } )
     ]
 };
