@@ -1,13 +1,3 @@
-import { DatasetController, registry } from 'chart.js';
+import { AreaController } from './core/AreaController';
 
-export default class AreaController extends DatasetController {
-
-    public static readonly id = 'area';
-
-    public initialize () : void {
-        super.initialize();
-    }
-
-}
-
-registry.addControllers( AreaController );
+export { AreaController };
