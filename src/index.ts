@@ -17,6 +17,24 @@ class ColorUtils {
         return color.toString();
     }
 
+    public static createMultiBandGradient (
+        ctx: CanvasRenderingContext2D,
+        chartArea: ChartJS.ChartArea,
+        zones: Array< { from: number; to: number; color: ChartJS.Color } >,
+        scale: ChartJS.Scale,
+        fillOpacity: number
+    ) : CanvasGradient {}
+
+    public static createThresholdGradient (
+        ctx: CanvasRenderingContext2D,
+        chartArea: ChartJS.ChartArea,
+        color: ChartJS.Color,
+        negativeColor: ChartJS.Color,
+        threshold: number,
+        scale: ChartJS.Scale,
+        fillOpacity: number
+    ) : CanvasGradient {}
+
 }
 
 declare module 'chart.js' {
@@ -78,6 +96,39 @@ export class AreaController extends ChartJS.LineController {
             if ( ! dataset.hoverState ) {
                 dataset.hoverBorderColor ||= dataset.borderColor;
                 dataset.hoverBackgroundColor ||= dataset.backgroundColor;
+            }
+        }
+    }
+
+    public update ( mode: 'default' | 'resize' | 'active' | 'hide' | 'show' | 'none' | 'reset' ) : void {
+        super.update( mode );
+
+        const meta = this.getMeta();
+        const dataset = this.getDataset() as AreaChartDatasetOptions;
+        const yAxisID = meta.yAxisID || 'y';
+        const scale = this.getScaleForId( yAxisID );
+
+        if ( ! scale ) return;
+    
+        const line = meta.dataset;
+        if ( line ) {
+            line.options = this.resolveDatasetElementOptions( mode );
+
+            if ( dataset.negativeColor || dataset.colorZones ) {
+                const chart = this.chart;
+                const chartArea = chart.chartArea;
+                const ctx = chart.ctx;
+
+                if ( dataset.colorZones ) {
+                    line.options.backgroundColor = ColorUtils.createMultiBandGradient(
+                        ctx, chartArea, dataset.colorZones, scale, dataset.fillOpacity || 0.6
+                    );
+                } else if ( dataset.negativeColor && dataset.color ) {
+                    line.options.backgroundColor = ColorUtils.createThresholdGradient(
+                        ctx, chartArea, dataset.color, dataset.negativeColor,
+                        dataset.threshold || 0, scale, dataset.fillOpacity || 0.6
+                    );
+                }
             }
         }
     }
