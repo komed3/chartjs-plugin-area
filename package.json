@@ -1,4 +1,36 @@
 {
+  "name": "chartjs-plugin-area",
+  "description": "Area chart controller for Chart.js with dual-color thresholds and multi-band zones",
+  "license": "MIT",
+  "version": "1.0.0",
+  "author": {
+    "name": "komed3 (Paul Köhler)",
+    "email": "webmaster@komed3.de",
+    "url": "https://komed3.de"
+  },
+  "homepage": "https://github.com/komed3/chartjs-plugin-area",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/komed3/chartjs-plugin-area.git"
+  },
+  "bugs": {
+    "url": "https://github.com/komed3/chartjs-plugin-area/issues"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "types": "dist/index.d.ts",
+  "main": "dist/index.js",
+  "browser": "dist/index.umd.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "umd": "./dist/index.umd.js"
+    }
+  },
   "dependencies": {
     "chart.js": "^4.5.1"
   },
