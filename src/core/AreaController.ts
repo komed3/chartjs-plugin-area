@@ -53,6 +53,18 @@ export class AreaController extends LineController {
     public initialize () : void {
         super.initialize();
         const dataset = this.getDataset() as AreaChartDatasetOptions;
+
+        if ( dataset.color ) {
+            dataset.borderColor ||= dataset.color;
+            dataset.backgroundColor ||= ColorUtils.toRGBA(
+                dataset.color, dataset.fillOpacity ||= 0.6
+            );
+
+            if ( ! dataset.hoverState ) {
+                dataset.hoverBorderColor ||= dataset.borderColor;
+                dataset.hoverBackgroundColor ||= dataset.backgroundColor;
+            }
+        }
     }
 
 }
