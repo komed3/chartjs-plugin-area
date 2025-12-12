@@ -1,5 +1,23 @@
-import { DatasetController, registry } from 'chart.js';
+import { CartesianScaleTypeRegistry, DatasetController, registry } from 'chart.js';
 import { ColorUtils } from './ColorUtils';
+
+declare module 'chart.js' {
+    interface ChartTypeRegistry {
+        area: {
+            chartOptions: {};
+            datasetOptions: AreaChartDatasetOptions;
+            defaultDataPoint: number;
+            metaExtensions: {};
+            parsedDataType: {
+                x: number;
+                y: number;
+            };
+            scales: keyof CartesianScaleTypeRegistry;
+        };
+    }
+}
+
+export interface AreaChartDatasetOptions {}
 
 export class AreaController extends DatasetController {
 
@@ -20,6 +38,8 @@ export class AreaController extends DatasetController {
     public initialize () : void {
         super.initialize();
         const dataset = this.getDataset();
+
+        if ( dataset.color )
     }
 
 }
