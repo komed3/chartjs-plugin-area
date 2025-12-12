@@ -46,7 +46,15 @@
             <canvas id="multiBandChart"></canvas>
         </div>
         <script>
-            //
+            // Generate sample data
+            function generateData ( points = 200, amplitude = 50, offset = 0 ) {
+                const labels = [], data = [];
+                for ( let i = 1; i <= points; i++ ) {
+                    labels.push( i );
+                    data.push( Math.sin( i * 0.5 ) * amplitude + offset + ( Math.random() - 0.5 ) * 20 );
+                }
+                return { labels, data };
+            }
         </script>
     </body>
 </html>
