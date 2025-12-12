@@ -1,12 +1,15 @@
-import { CartesianScaleTypeRegistry, DatasetController, registry } from 'chart.js';
 import { ColorUtils } from './ColorUtils';
+import {
+    CartesianScaleTypeRegistry, Color, LineController, LineControllerChartOptions,
+    LineControllerDatasetOptions, registry
+} from 'chart.js';
 
 declare module 'chart.js' {
     interface ChartTypeRegistry {
         area: {
-            chartOptions: {};
+            chartOptions: LineControllerChartOptions;
             datasetOptions: AreaChartDatasetOptions;
-            defaultDataPoint: number;
+            defaultDataPoint: number | [ number, number ] | null;
             metaExtensions: {};
             parsedDataType: {
                 x: number;
@@ -17,9 +20,20 @@ declare module 'chart.js' {
     }
 }
 
-export interface AreaChartDatasetOptions {}
+export interface AreaChartDatasetOptions extends LineControllerDatasetOptions {
+    color?: Color;
+    negativeColor?: Color;
+    threshold?: number;
+    fillOpacity?: number;
+    hoverState?: boolean;
+    colorZones?: Array< {
+        from: number;
+        to: number;
+        color: Color;
+    } >;
+}
 
-export class AreaController extends DatasetController {
+export class AreaController extends LineController {
 
     static readonly id = 'area';
     static readonly defaults = {
@@ -31,15 +45,14 @@ export class AreaController extends DatasetController {
         pointRadius: 3,
         pointHoverRadius: 5,
         threshold: 0,
+        showLine: true,
         fillOpacity: 0.6,
         hoverState: false
     };
 
     public initialize () : void {
         super.initialize();
-        const dataset = this.getDataset();
-
-        if ( dataset.color )
+        const dataset = this.getDataset() as AreaChartDatasetOptions;
     }
 
 }
