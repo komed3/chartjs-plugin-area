@@ -1,3 +1,1 @@
-import { AreaController } from './core/AreaController';
-
-export { AreaController };
+export { AreaController } from './core/AreaController';
