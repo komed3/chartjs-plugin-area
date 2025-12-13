@@ -89,6 +89,32 @@ class ColorUtils {
         ], fillOpacity );
     }
 
+    /**
+     * Determines the color for a given value based on zones or threshold.
+     * @param value - The value to check
+     * @param zones - Array of color zones
+     * @param color - Default positive color
+     * @param negativeColor - Default negative color
+     * @param threshold - Threshold for positive/negative
+     * @returns The appropriate color
+     */
+    public static getColorForValue (
+        value: number,
+        zones?: Array< { from: number; to: number; color: ChartJS.Color } >,
+        color?: ChartJS.Color,
+        negativeColor?: ChartJS.Color,
+        threshold: number = 0
+    ) : ChartJS.Color | undefined {
+        if ( zones ) {
+            for ( const zone of zones ) {
+                if ( value >= zone.from && value <= zone.to ) return zone.color;
+            }
+        } else if ( color && negativeColor ) {
+            return value >= threshold ? color : negativeColor;
+        }
+        return undefined;
+    }
+
 }
 
 /**
