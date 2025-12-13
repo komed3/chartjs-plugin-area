@@ -1,5 +1,11 @@
 import * as ChartJS from 'chart.js';
 
+export interface AreaChartColorZone {
+    from: number;
+    to: number;
+    color: ChartJS.Color
+}
+
 /**
  * Extended dataset options for the Area chart controller.
  */
@@ -11,7 +17,7 @@ export interface AreaChartDatasetOptions extends ChartJS.LineControllerDatasetOp
     hoverState?: boolean;
     colorPointsByValue?: boolean;
     pointOpacity?: number;
-    colorZones?: Array<{ from: number; to: number; color: ChartJS.Color }>;
+    colorZones?: Array<AreaChartColorZone>;
 }
 
 /**
@@ -37,59 +43,77 @@ class ColorUtils {
 
     /**
      * Converts a color to RGBA format with specified alpha.
+     * @param color - The input color (string or Chart.js Color object)
+     * @param alpha - The alpha value (0-1)
+     * @returns The color in RGBA string format
      */
-    public static rgba(color: ChartJS.Color, alpha: number = 1): string {
-        if (typeof color !== 'string') return color.toString();
-
-        if (color.startsWith('#')) {
-            const [r, g, b] = [1, 3, 5].map(i => parseInt(color.slice(i, i + 2), 16));
+    public static rgba ( color: ChartJS.Color, alpha: number = 1 ) : string {
+        if ( typeof color !== 'string' ) return color.toString();
+        if ( color.startsWith( 'rgb' ) ) return color.replace( /rgba?\(([^)]+)\)/, `rgba($1, ${alpha})` );
+        if ( color.startsWith( '#' ) ) {
+            const [ r, g, b ] = [ 1, 3, 5 ].map( i => parseInt( color.slice( i, i + 2 ), 16 ) );
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
-
-        if (color.startsWith('rgb')) {
-            return color.replace(/rgba?\(([^)]+)\)/, `rgba($1, ${alpha})`);
-        }
-
         return color;
     }
 
     /**
      * Normalizes position to 0-1 range within chart area.
+     * @param y - The data value
+     * @param scale - The chart scale
+     * @param chartArea - The chart area
+     * @returns Normalized position (0-1)
      */
-    private static normalizePosition(y: number, scale: ChartJS.Scale, chartArea: ChartJS.ChartArea): number {
-        const range = chartArea.bottom - chartArea.top;
-        return Math.max(0, Math.min(1, (scale.getPixelForValue(y) - chartArea.top) / range));
+    private static normalizePosition ( y: number, scale: ChartJS.Scale, chartArea: ChartJS.ChartArea ) : number {
+        return Math.max( 0, Math.min( 1,
+            ( scale.getPixelForValue( y ) - chartArea.top ) /
+            ( chartArea.bottom - chartArea.top ) 
+        ) );
     }
 
     /**
      * Creates a multi-band linear gradient based on value zones.
+     * @param ctx - The canvas rendering context
+     * @param chartArea - The chart area dimensions
+     * @param scale - The scale used for value-to-pixel conversion
+     * @param zones - Array of zones with from, to, and color
+     * @param fillOpacity - Opacity for the fill (0-1)
+     * @returns The created linear gradient
      */
-    public static createMultiBandGradient(
+    public static createMultiBandGradient (
         ctx: CanvasRenderingContext2D,
         chartArea: ChartJS.ChartArea,
         scale: ChartJS.Scale,
-        zones: Array<{ from: number; to: number; color: ChartJS.Color }>,
+        zones: Array< AreaChartColorZone >,
         fillOpacity: number = 1
-    ): CanvasGradient {
-        const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-        const sortedZones = [...zones].sort((a, b) => b.from - a.from);
+    ) : CanvasGradient {
+        const gradient = ctx.createLinearGradient( 0, chartArea.top, 0, chartArea.bottom );
+        const sortedZones = [ ...zones ].sort( ( a, b ) => b.from - a.from );
 
-        sortedZones.forEach(zone => {
-            const startPos = this.normalizePosition(zone.from, scale, chartArea);
-            const endPos = this.normalizePosition(zone.to, scale, chartArea);
+        sortedZones.forEach( zone => {
+            const color = this.rgba( zone.color, fillOpacity );
+            const startPos = this.normalizePosition( zone.from, scale, chartArea );
+            const endPos = this.normalizePosition( zone.to, scale, chartArea );
 
-            const color = this.rgba(zone.color, fillOpacity);
-            gradient.addColorStop(startPos, color);
-            gradient.addColorStop(endPos, color);
-        });
+            gradient.addColorStop( startPos, color );
+            gradient.addColorStop( endPos, color );
+        } );
 
         return gradient;
     }
 
     /**
      * Creates a threshold-based gradient for positive and negative values.
+     * @param ctx - The canvas rendering context
+     * @param chartArea - The chart area dimensions
+     * @param scale - The scale used for value-to-pixel conversion
+     * @param color - Color for positive values
+     * @param negativeColor - Color for negative values
+     * @param threshold - The threshold value
+     * @param fillOpacity - Opacity for the fill (0-1)
+     * @returns The created linear gradient
      */
-    public static createThresholdGradient(
+    public static createThresholdGradient (
         ctx: CanvasRenderingContext2D,
         chartArea: ChartJS.ChartArea,
         scale: ChartJS.Scale,
@@ -97,30 +121,33 @@ class ColorUtils {
         negativeColor: ChartJS.Color,
         threshold: number = 0,
         fillOpacity: number = 1
-    ): CanvasGradient {
-        return this.createMultiBandGradient(ctx, chartArea, scale, [
+    ) : CanvasGradient {
+        return this.createMultiBandGradient( ctx, chartArea, scale, [
             { from: +Infinity, to: threshold, color },
             { from: threshold, to: -Infinity, color: negativeColor }
-        ], fillOpacity);
+        ], fillOpacity );
     }
 
     /**
      * Determines the color for a given value based on zones or threshold.
+     * @param value - The value to check
+     * @param zones - Array of color zones
+     * @param color - Default positive color
+     * @param negativeColor - Default negative color
+     * @param threshold - Threshold for positive/negative
+     * @returns The appropriate color
      */
-    public static getColorForValue(
+    public static getColorForValue (
         value: number,
-        zones?: Array<{ from: number; to: number; color: ChartJS.Color }>,
+        zones?: Array< AreaChartColorZone >,
         color?: ChartJS.Color,
         negativeColor?: ChartJS.Color,
         threshold: number = 0
-    ): ChartJS.Color | undefined {
-        if (zones) {
-            for (const zone of zones) {
-                if (value >= zone.from && value <= zone.to) return zone.color;
-            }
-        }
+    ) : ChartJS.Color | undefined {
+        for ( const zone of zones ?? [] ) if ( value >= zone.from && value <= zone.to ) return zone.color;
         return value < threshold ? negativeColor : color;
     }
+
 }
 
 /**
