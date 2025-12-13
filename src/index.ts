@@ -257,29 +257,30 @@ export class AreaController extends ChartJS.LineController {
 
     /**
      * Creates a color resolver function for points based on their values.
+     * @param isBackground - Whether to resolve background color (true) or border color (false)
+     * @returns A function that resolves color based on point context
      */
-    private createPointColorResolver(
+    private createPointColorResolver (
         isBackground: boolean
-    ): (ctx: any) => string | undefined {
+    ) : ( ctx: any ) => string | undefined {
         const { colorZones, color, negativeColor, threshold = 0, pointOpacity = 1 } = this.dataset;
         const opacity = isBackground ? pointOpacity : 1;
 
-        return (ctx: any) => {
+        return ( ctx: any ) => {
             const y = ctx.parsed?.y;
-            if (y == null) return undefined;
-
-            const resolvedColor = ColorUtils.getColorForValue(y, colorZones, color, negativeColor, threshold);
-            return resolvedColor ? ColorUtils.rgba(resolvedColor, opacity) : undefined;
+            if ( y == null ) return undefined;
+            const resolvedColor = ColorUtils.getColorForValue( y, colorZones, color, negativeColor, threshold );
+            return resolvedColor ? ColorUtils.rgba( resolvedColor, opacity ) : undefined;
         };
     }
 
     /**
      * Applies point coloring based on values.
      */
-    private applyPointColors(): void {
+    private applyPointColors () : void {
         const ds = this.getDataset() as AreaChartDatasetOptions;
-        const bgColorResolver = this.createPointColorResolver(true);
-        const borderColorResolver = this.createPointColorResolver(false);
+        const bgColorResolver = this.createPointColorResolver( true );
+        const borderColorResolver = this.createPointColorResolver( false );
 
         ds.pointBackgroundColor = bgColorResolver;
         ds.pointBorderColor = borderColorResolver;
@@ -287,36 +288,33 @@ export class AreaController extends ChartJS.LineController {
         ds.pointHoverBorderColor = borderColorResolver;
     }
 
-    public update(mode: ChartJS.UpdateMode): void {
-        super.update(mode);
+    public update ( mode: ChartJS.UpdateMode ) : void {
+        super.update( mode );
 
         const meta = this.getMeta();
         const yAxisID = meta.yAxisID || 'y';
-        const scale = this.getScaleForId(yAxisID);
+        const scale = this.getScaleForId( yAxisID );
         const line = meta.dataset;
 
-        if (!scale || !line) return;
+        if ( ! scale || ! line ) return;
 
-        line.options = this.resolveDatasetElementOptions(mode);
+        line.options = this.resolveDatasetElementOptions( mode );
 
-        if (this.dataset.showLine === false) {
-            line.options.borderWidth = 0;
-        }
+        // Hide line if showLine is false
+        if ( this.dataset.showLine === false ) line.options.borderWidth = 0;
 
         // Apply line and background colors
-        if (this.dataset.negativeColor || this.dataset.colorZones || this.dataset.color) {
+        if ( this.dataset.negativeColor || this.dataset.colorZones || this.dataset.color ) {
             const { ctx, chartArea } = this.chart;
-            this.applyLineColors(line, ctx, chartArea, scale);
+            this.applyLineColors( line, ctx, chartArea, scale );
         }
 
         // Apply point colors based on values
-        if (this.dataset.colorPointsByValue) {
-            this.applyPointColors();
-        }
+        if ( this.dataset.colorPointsByValue ) this.applyPointColors();
     }
 }
 
 /**
  * Register the AreaController with Chart.js
  */
-ChartJS.registry.addControllers(AreaController);
+ChartJS.registry.addControllers( AreaController );
