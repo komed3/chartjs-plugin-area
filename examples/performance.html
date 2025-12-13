@@ -128,8 +128,25 @@
 
                 const endTime = performance.now();
                 renderTime = endTime - startTime;
-                //updateStats();
+                updateStats();
             }
+
+            function updateStats () {
+                const points = chart ? chart.data.datasets[ 0 ].data.length : 0;
+                const memoryUsage = performance.memory ? 
+                    `${(performance.memory.usedJSHeapSize / 1024 / 1024 ).toFixed( 2 )} MB` : 
+                    'N/A';
+
+                document.getElementById( 'stats' ).innerHTML = `
+                    <strong>Performance Statistics:</strong><br>
+                    Data Points: ${ points.toFixed( 0 ) }<br>
+                    Render Time: ${ renderTime.toFixed( 2 ) } ms<br>
+                    Memory Usage: ${memoryUsage}<br>
+                    Points per Second: ${ ( points / ( renderTime / 1000 ) ).toFixed( 0 ) }
+                `;
+            }
+
+            window.onload = () => generateChart();
         </script>
     </body>
 </html>
