@@ -20,12 +20,12 @@ class ColorUtils {
     public static createMultiBandGradient (
         ctx: CanvasRenderingContext2D,
         chartArea: ChartJS.ChartArea,
-        zones: Array< { from: number; to: number; color: ChartJS.Color } >,
         scale: ChartJS.Scale,
-        fillOpacity: number
+        zones: Array< { from: number; to: number; color: ChartJS.Color } >,
+        fillOpacity: number = 1
     ) : CanvasGradient {
         const gradient = ctx.createLinearGradient( 0, chartArea.top, 0, chartArea.bottom );
-        const sortedZones = [ ...zones ].sort( ( a, b ) => a.from - b.from );
+        const sortedZones = [ ...zones ].sort( ( a, b ) => b.from - a.from );
 
         sortedZones.forEach( zone => {
             const startY = scale.getPixelForValue( zone.from );
@@ -48,16 +48,16 @@ class ColorUtils {
     public static createThresholdGradient (
         ctx: CanvasRenderingContext2D,
         chartArea: ChartJS.ChartArea,
+        scale: ChartJS.Scale,
         color: ChartJS.Color,
         negativeColor: ChartJS.Color,
-        threshold: number,
-        scale: ChartJS.Scale,
-        fillOpacity: number
+        threshold: number = 0,
+        fillOpacity: number = 1
     ) : CanvasGradient {
-        return this.createMultiBandGradient( ctx, chartArea, [
-            { from: scale.max, to: threshold, color: color },
-            { from: threshold, to: scale.min, color: negativeColor }
-        ], scale, fillOpacity );
+        return this.createMultiBandGradient( ctx, chartArea, scale, [
+            { from: +Infinity, to: threshold, color: color },
+            { from: threshold, to: -Infinity, color: negativeColor }
+        ], fillOpacity );
     }
 
 }
@@ -145,13 +145,20 @@ export class AreaController extends ChartJS.LineController {
                 const ctx = chart.ctx;
 
                 if ( dataset.colorZones ) {
-                    line.options.backgroundColor = ColorUtils.createMultiBandGradient(
-                        ctx, chartArea, dataset.colorZones, scale, dataset.fillOpacity || 0.6
+                    line.options.borderColor = ColorUtils.createMultiBandGradient(
+                        ctx, chartArea, scale, dataset.colorZones, 1
                     );
-                } else if ( dataset.negativeColor && dataset.color ) {
+                    line.options.backgroundColor = ColorUtils.createMultiBandGradient(
+                        ctx, chartArea, scale, dataset.colorZones, dataset.fillOpacity || 0.6
+                    );
+                } else if ( dataset.color && dataset.negativeColor ) {
+                    line.options.borderColor = ColorUtils.createThresholdGradient(
+                        ctx, chartArea, scale, dataset.color, dataset.negativeColor,
+                        dataset.threshold || 0, 1
+                    );
                     line.options.backgroundColor = ColorUtils.createThresholdGradient(
-                        ctx, chartArea, dataset.color, dataset.negativeColor,
-                        dataset.threshold || 0, scale, dataset.fillOpacity || 0.6
+                        ctx, chartArea, scale, dataset.color, dataset.negativeColor,
+                        dataset.threshold || 0, dataset.fillOpacity || 0.6
                     );
                 }
             }
