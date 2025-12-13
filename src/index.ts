@@ -23,7 +23,27 @@ class ColorUtils {
         zones: Array< { from: number; to: number; color: ChartJS.Color } >,
         scale: ChartJS.Scale,
         fillOpacity: number
-    ) : CanvasGradient {}
+    ) : CanvasGradient {
+        const gradient = ctx.createLinearGradient( 0, chartArea.top, 0, chartArea.bottom );
+        const sortedZones = [ ...zones ].sort( ( a, b ) => a.from - b.from );
+
+        sortedZones.forEach( zone => {
+            const startY = scale.getPixelForValue( zone.from );
+            const endY = scale.getPixelForValue( zone.to );
+
+            const startPosition = Math.max( 0, Math.min( 1,
+                ( startY - chartArea.top ) / ( chartArea.bottom - chartArea.top )
+            ) );
+            const endPosition = Math.max( 0, Math.min( 1,
+                ( endY - chartArea.top ) / ( chartArea.bottom - chartArea.top )
+            ) );
+
+            gradient.addColorStop( startPosition, this.toRGBA( zone.color, fillOpacity ) );
+            gradient.addColorStop( endPosition, this.toRGBA( zone.color, fillOpacity ) );
+        } );
+
+        return gradient;
+    }
 
     public static createThresholdGradient (
         ctx: CanvasRenderingContext2D,
