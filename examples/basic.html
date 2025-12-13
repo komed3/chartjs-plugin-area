@@ -42,11 +42,11 @@
         </div>
         <div class="chart-container">
             <h2>Threshold-based Dual Coloring</h2>
-            <canvas id="thresholdChart"></canvas>
+            <div class="chart"><canvas id="thresholdChart"></canvas></div>
         </div>
         <div class="chart-container">
             <h2>Multi-band Color Zones</h2>
-            <canvas id="multiBandChart"></canvas>
+            <div class="chart"><canvas id="multiBandChart"></canvas></div>
         </div>
         <script>
             // Generate sample data
@@ -64,6 +64,7 @@
             Chart.defaults.maintainAspectRatio = false;
             Chart.defaults.offset = false;
             Chart.defaults.layout.padding = 0;
+            Chart.defaults.plugins.legend.display = false;
             Chart.defaults.interaction = { mode: 'index', intersect: false };
             Chart.defaults.transitions = { active: { animation: { duration: 0 } } };
             Chart.defaults.animations = {
@@ -80,20 +81,57 @@
                     datasets: [ {
                         label: 'Sales Revenue',
                         data: generateData( 12, 30, 50 ),
-                        color: '#007bff',
+                        color: '#4ecdc4',
                         fillOpacity: 0.4
                     } ]
                 },
                 options: {
-                    plugins: {
-                        legend: false
-                    },
                     scales: {
                         y: {
                             beginAtZero: true,
                             title: {
                                 display: true,
                                 text: 'Revenue ($k)'
+                            }
+                        }
+                    }
+                }
+            } );
+
+            // Threshold-based Dual Coloring
+            const thresholdCtx = document.getElementById( 'thresholdChart' ).getContext( '2d' );
+            new Chart( thresholdCtx, {
+                type: 'area',
+                data: {
+                    labels: labels,
+                    datasets: [ {
+                        label: 'Temperature Variance',
+                        data: generateData( 12, 25, 0 ),
+                        color: '#ff6b6b',
+                        negativeColor: '#007bff',
+                        threshold: 0,
+                        fillOpacity: 0.5
+                    } ]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed( 1 )}°C`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Temperature (°C)'
+                            },
+                            grid: {
+                                color: ctx => ctx.tick.value === 0 ? '#666' : '#e0e0e0'
                             }
                         }
                     }
