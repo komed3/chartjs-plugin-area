@@ -252,6 +252,9 @@ export class AreaController extends ChartJS.LineController {
                         this.dataset.threshold || 0, this.dataset.fillOpacity || 0.6
                     );
                 }
+            } else if ( this.dataset.color ) {
+                line.options.borderColor = this.dataset.color;
+                line.options.backgroundColor = ColorUtils.toRGBA( this.dataset.color, this.dataset.fillOpacity );
             }
         }
 
