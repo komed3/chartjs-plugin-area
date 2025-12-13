@@ -258,7 +258,8 @@ export class AreaController extends ChartJS.LineController {
                     const rgbaBorder = ColorUtils.toRGBA( pointColor, 1 );
 
                     point.options = { ...point.options,
-                        backgroundColor: rgbaColor, borderColor: rgbaBorder,
+                        backgroundColor: rgbaColor,
+                        borderColor: rgbaBorder,
                         hoverBackgroundColor: rgbaColor,
                         hoverBorderColor: rgbaBorder
                     };
