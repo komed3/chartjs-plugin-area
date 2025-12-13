@@ -193,24 +193,10 @@ export class AreaController extends ChartJS.LineController {
      */
     public initialize () : void {
         super.initialize();
-
         this.dataset = {
             ...AreaController.defaults,
             ...this.getDataset()
         } as AreaChartDatasetOptions;
-
-        if ( this.dataset.showLine === false ) this.dataset.borderWidth = 0;
-        if ( this.dataset.color ) {
-            this.dataset.borderColor ||= this.dataset.color;
-            this.dataset.backgroundColor ||= ColorUtils.toRGBA(
-                this.dataset.color, this.dataset.fillOpacity ||= 0.6
-            );
-
-            if ( ! this.dataset.hoverState ) {
-                this.dataset.hoverBorderColor ||= this.dataset.borderColor;
-                this.dataset.hoverBackgroundColor ||= this.dataset.backgroundColor;
-            }
-        }
     }
 
     /**
@@ -229,6 +215,7 @@ export class AreaController extends ChartJS.LineController {
     
         line.options = this.resolveDatasetElementOptions( mode );
 
+        if ( this.dataset.showLine === false ) line.options.borderWidth = 0;
         if ( this.dataset.negativeColor || this.dataset.colorZones ) {
             const chart = this.chart;
             const chartArea = chart.chartArea;
