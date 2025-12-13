@@ -105,14 +105,10 @@ class ColorUtils {
         negativeColor?: ChartJS.Color,
         threshold: number = 0
     ) : ChartJS.Color | undefined {
-        if ( zones ) {
-            for ( const zone of zones ) {
-                if ( value >= zone.from && value <= zone.to ) return zone.color;
-            }
-        } else if ( color && negativeColor ) {
-            return value >= threshold ? color : negativeColor;
-        }
-        return color ?? negativeColor ?? undefined;
+        if ( zones ) { for ( const zone of zones ) {
+            if ( value >= zone.from && value <= zone.to ) return zone.color;
+        } }
+        return negativeColor && value < threshold ? negativeColor : color;
     }
 
 }
