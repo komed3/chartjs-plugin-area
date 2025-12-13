@@ -151,16 +151,16 @@ export interface AreaChartDatasetOptions extends ChartJS.LineControllerDatasetOp
     fillOpacity?: number;
     /** Whether to apply hover state colors */
     hoverState?: boolean;
+    /** Whether to color points based on their value */
+    colorPointsByValue?: boolean;
+    /** Opacity for point colors (0-1) */
+    pointOpacity?: number;
     /** Array of color zones for multi-band coloring */
     colorZones?: Array< {
         from: number;
         to: number;
         color: ChartJS.Color;
     } >;
-    /** Whether to color points based on their value */
-    colorPointsByValue?: boolean;
-    /** Opacity for point colors (0-1) */
-    pointOpacity?: number;
 }
 
 /**
@@ -258,6 +258,31 @@ export class AreaController extends ChartJS.LineController {
                 }
             }
         }
+
+        meta.data.forEach( ( point: any, index ) => {
+            point.options = this.resolveDataElementOptions( index, mode );
+
+            if ( this.dataset.colorPointsByValue ) {
+                const parsed = this.getParsed( index ) as { y: number };
+                const pointColor = ColorUtils.getColorForValue(
+                    parsed.y, this.dataset.colorZones, this.dataset.color,
+                    this.dataset.negativeColor, this.dataset.threshold || 0
+                );
+
+                if ( pointColor ) {
+                    const rgbaColor = ColorUtils.toRGBA( pointColor, this.dataset.pointOpacity || 1 );
+                    const rgbaBorder = ColorUtils.toRGBA( pointColor, 1 );
+
+                    point.options = { ...point.options,
+                        backgroundColor: rgbaColor, borderColor: rgbaBorder,
+                        hoverBackgroundColor: this.dataset.hoverState
+                            ? point.options.hoverBackgroundColor : rgbaColor,
+                        hoverBorderColor: this.dataset.hoverState
+                            ? point.options.hoverBorderColor : rgbaBorder
+                    };
+                }
+            }
+        } );
     }
 
 }
