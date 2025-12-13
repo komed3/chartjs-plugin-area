@@ -1,6 +1,36 @@
 import * as ChartJS from 'chart.js';
 
 /**
+ * Extended dataset options for the Area chart controller.
+ */
+export interface AreaChartDatasetOptions extends ChartJS.LineControllerDatasetOptions {
+    color?: ChartJS.Color;
+    negativeColor?: ChartJS.Color;
+    threshold?: number;
+    fillOpacity?: number;
+    hoverState?: boolean;
+    colorPointsByValue?: boolean;
+    pointOpacity?: number;
+    colorZones?: Array<{ from: number; to: number; color: ChartJS.Color }>;
+}
+
+/**
+ * Declare the Area chart type in Chart.js registry.
+ */
+declare module 'chart.js' {
+    interface ChartTypeRegistry {
+        area: {
+            chartOptions: ChartJS.LineControllerChartOptions;
+            datasetOptions: AreaChartDatasetOptions;
+            defaultDataPoint: number | [number, number] | null;
+            metaExtensions: {};
+            parsedDataType: { x: number; y: number };
+            scales: keyof ChartJS.CartesianScaleTypeRegistry;
+        };
+    }
+}
+
+/**
  * Utility class for color manipulation and gradient creation in Chart.js plugins.
  */
 class ColorUtils {
@@ -8,7 +38,7 @@ class ColorUtils {
     /**
      * Converts a color to RGBA format with specified alpha.
      */
-    public static toRGBA(color: ChartJS.Color, alpha: number = 1): string {
+    public static rgba(color: ChartJS.Color, alpha: number = 1): string {
         if (typeof color !== 'string') return color.toString();
 
         if (color.startsWith('#')) {
@@ -26,9 +56,9 @@ class ColorUtils {
     /**
      * Normalizes position to 0-1 range within chart area.
      */
-    private static normalizePosition(pixel: number, chartArea: ChartJS.ChartArea): number {
+    private static normalizePosition(y: number, scale: ChartJS.Scale, chartArea: ChartJS.ChartArea): number {
         const range = chartArea.bottom - chartArea.top;
-        return Math.max(0, Math.min(1, (pixel - chartArea.top) / range));
+        return Math.max(0, Math.min(1, (scale.getPixelForValue(y) - chartArea.top) / range));
     }
 
     /**
@@ -45,10 +75,10 @@ class ColorUtils {
         const sortedZones = [...zones].sort((a, b) => b.from - a.from);
 
         sortedZones.forEach(zone => {
-            const startPos = this.normalizePosition(scale.getPixelForValue(zone.from), chartArea);
-            const endPos = this.normalizePosition(scale.getPixelForValue(zone.to), chartArea);
+            const startPos = this.normalizePosition(zone.from, scale, chartArea);
+            const endPos = this.normalizePosition(zone.to, scale, chartArea);
 
-            const color = this.toRGBA(zone.color, fillOpacity);
+            const color = this.rgba(zone.color, fillOpacity);
             gradient.addColorStop(startPos, color);
             gradient.addColorStop(endPos, color);
         });
@@ -91,36 +121,6 @@ class ColorUtils {
         }
         return value < threshold ? negativeColor : color;
     }
-}
-
-/**
- * Declare the Area chart type in Chart.js registry.
- */
-declare module 'chart.js' {
-    interface ChartTypeRegistry {
-        area: {
-            chartOptions: ChartJS.LineControllerChartOptions;
-            datasetOptions: AreaChartDatasetOptions;
-            defaultDataPoint: number | [number, number] | null;
-            metaExtensions: {};
-            parsedDataType: { x: number; y: number };
-            scales: keyof ChartJS.CartesianScaleTypeRegistry;
-        };
-    }
-}
-
-/**
- * Extended dataset options for the Area chart controller.
- */
-export interface AreaChartDatasetOptions extends ChartJS.LineControllerDatasetOptions {
-    color?: ChartJS.Color;
-    negativeColor?: ChartJS.Color;
-    threshold?: number;
-    fillOpacity?: number;
-    hoverState?: boolean;
-    colorPointsByValue?: boolean;
-    pointOpacity?: number;
-    colorZones?: Array<{ from: number; to: number; color: ChartJS.Color }>;
 }
 
 /**
@@ -168,22 +168,22 @@ export class AreaController extends ChartJS.LineController {
         const { color, negativeColor, colorZones, fillOpacity = 0.6 } = this.dataset;
 
         if (colorZones) {
-            const gradient = ColorUtils.createMultiBandGradient(ctx, chartArea, scale, colorZones, 1);
-            line.options.borderColor = gradient;
+            line.options.borderColor = ColorUtils.createMultiBandGradient(
+                ctx, chartArea, scale, colorZones, 1
+            );
             line.options.backgroundColor = ColorUtils.createMultiBandGradient(
                 ctx, chartArea, scale, colorZones, fillOpacity
             );
         } else if (color && negativeColor) {
-            const gradient = ColorUtils.createThresholdGradient(
+            line.options.borderColor = ColorUtils.createThresholdGradient(
                 ctx, chartArea, scale, color, negativeColor, this.dataset.threshold || 0, 1
             );
-            line.options.borderColor = gradient;
             line.options.backgroundColor = ColorUtils.createThresholdGradient(
                 ctx, chartArea, scale, color, negativeColor, this.dataset.threshold || 0, fillOpacity
             );
         } else if (color) {
-            line.options.borderColor = color;
-            line.options.backgroundColor = ColorUtils.toRGBA(color, fillOpacity);
+            line.options.borderColor = ColorUtils.rgba(color);
+            line.options.backgroundColor = ColorUtils.rgba(color, fillOpacity);
         }
     }
 
@@ -201,14 +201,15 @@ export class AreaController extends ChartJS.LineController {
             if (y == null) return undefined;
 
             const resolvedColor = ColorUtils.getColorForValue(y, colorZones, color, negativeColor, threshold);
-            return resolvedColor ? ColorUtils.toRGBA(resolvedColor, opacity) : undefined;
+            return resolvedColor ? ColorUtils.rgba(resolvedColor, opacity) : undefined;
         };
     }
 
     /**
      * Applies point coloring based on values.
      */
-    private applyPointColors(ds: AreaChartDatasetOptions): void {
+    private applyPointColors(): void {
+        const ds = this.getDataset() as AreaChartDatasetOptions;
         const bgColorResolver = this.createPointColorResolver(true);
         const borderColorResolver = this.createPointColorResolver(false);
 
@@ -242,8 +243,7 @@ export class AreaController extends ChartJS.LineController {
 
         // Apply point colors based on values
         if (this.dataset.colorPointsByValue) {
-            const ds = this.getDataset() as AreaChartDatasetOptions;
-            this.applyPointColors(ds);
+            this.applyPointColors();
         }
     }
 }
