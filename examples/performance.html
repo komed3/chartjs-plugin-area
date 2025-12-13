@@ -62,6 +62,21 @@
         <div class="chart-container">
             <div class="chart"><canvas id="performanceChart"></canvas></div>
         </div>
-        <script></script>
+        <script>
+            let chart;
+            let renderTime = 0;
+
+            function generateLargeData ( points ) {
+                const labels = [], data = [];
+                for ( let i = 0; i < points; i++ ) {
+                    labels.push( i );
+                    data.push(
+                        Math.sin( i * 0.01 ) * 50 + Math.cos( i * 0.007 ) * 30 +
+                        Math.sin( i * 0.003 ) * 20 + ( Math.random() - 0.5 ) * 10
+                    );
+                }
+                return { labels, data };
+            }
+        </script>
     </body>
 </html>
