@@ -9,7 +9,9 @@ export interface AreaChartColorZone {
     /** Ending value of the zone */
     to: number;
     /** Color associated with the zone */
-    color: ChartJS.Color
+    color: ChartJS.Color;
+    /** Optional opacity for the zone (0-1) */
+    opacity?: number;
 }
 
 /**
@@ -61,7 +63,10 @@ class ColorUtils {
      * @param alpha - The alpha value (0-1)
      * @returns The color in RGBA string format
      */
-    public static rgba ( color: ChartJS.Color, alpha: number = 1 ) : string {
+    public static rgba (
+        color: ChartJS.Color,
+        alpha: number = 1
+    ) : string {
         if ( typeof color !== 'string' ) return color.toString();
         if ( color.startsWith( 'rgb' ) ) return color.replace( /rgba?\(([^)]+)\)/, `rgba($1, ${alpha})` );
         if ( color.startsWith( '#' ) ) {
@@ -78,7 +83,11 @@ class ColorUtils {
      * @param chartArea - The chart area
      * @returns Normalized position (0-1)
      */
-    private static normalizePosition ( y: number, scale: ChartJS.Scale, chartArea: ChartJS.ChartArea ) : number {
+    private static normalizePosition (
+        y: number,
+        scale: ChartJS.Scale,
+        chartArea: ChartJS.ChartArea
+    ) : number {
         return Math.max( 0, Math.min( 1,
             ( scale.getPixelForValue( y ) - chartArea.top ) /
             ( chartArea.bottom - chartArea.top ) 
@@ -105,7 +114,7 @@ class ColorUtils {
         const sortedZones = [ ...zones ].sort( ( a, b ) => b.from - a.from );
 
         sortedZones.forEach( zone => {
-            const color = this.rgba( zone.color, fillOpacity );
+            const color = this.rgba( zone.color, zone.opacity ?? fillOpacity );
             const startPos = this.normalizePosition( zone.from, scale, chartArea );
             const endPos = this.normalizePosition( zone.to, scale, chartArea );
 
@@ -170,8 +179,10 @@ class ColorUtils {
  */
 export class AreaController extends ChartJS.LineController {
 
+    /** Chart.js controller identifier */
     static readonly id = 'area';
 
+    /** Default dataset options for the Area chart */
     static readonly defaults = {
         datasetElementType: 'line',
         dataElementType: 'point',
@@ -188,9 +199,13 @@ export class AreaController extends ChartJS.LineController {
         pointOpacity: 1
     };
 
+    /** Extended dataset options specific to Area chart */
     protected dataset!: AreaChartDatasetOptions;
 
-    public initialize(): void {
+    /**
+     * Initializes the controller and merges dataset options.
+     */
+    public initialize() : void {
         super.initialize();
         this.dataset = {
             ...AreaController.defaults,
@@ -200,32 +215,43 @@ export class AreaController extends ChartJS.LineController {
 
     /**
      * Applies gradient or solid colors to line and background.
+     * @param line - The line element
+     * @param ctx - The canvas rendering context
+     * @param chartArea - The chart area dimensions
+     * @param scale - The scale used for value-to-pixel conversion
      */
-    private applyLineColors(
+    private applyLineColors (
         line: any,
         ctx: CanvasRenderingContext2D,
         chartArea: ChartJS.ChartArea,
         scale: ChartJS.Scale
-    ): void {
+    ) : void {
         const { color, negativeColor, colorZones, fillOpacity = 0.6 } = this.dataset;
 
-        if (colorZones) {
+        // Apply multi-band gradient if color zones are defined
+        if ( colorZones ) {
             line.options.borderColor = ColorUtils.createMultiBandGradient(
                 ctx, chartArea, scale, colorZones, 1
             );
             line.options.backgroundColor = ColorUtils.createMultiBandGradient(
                 ctx, chartArea, scale, colorZones, fillOpacity
             );
-        } else if (color && negativeColor) {
+        }
+
+        // Apply threshold gradient if positive and negative colors are defined
+        else if ( color && negativeColor ) {
             line.options.borderColor = ColorUtils.createThresholdGradient(
                 ctx, chartArea, scale, color, negativeColor, this.dataset.threshold || 0, 1
             );
             line.options.backgroundColor = ColorUtils.createThresholdGradient(
                 ctx, chartArea, scale, color, negativeColor, this.dataset.threshold || 0, fillOpacity
             );
-        } else if (color) {
-            line.options.borderColor = ColorUtils.rgba(color);
-            line.options.backgroundColor = ColorUtils.rgba(color, fillOpacity);
+        }
+
+        // Apply solid color if only one color is defined
+        else if ( color ) {
+            line.options.borderColor = ColorUtils.rgba( color );
+            line.options.backgroundColor = ColorUtils.rgba( color, fillOpacity );
         }
     }
 
