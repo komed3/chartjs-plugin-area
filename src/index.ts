@@ -1,5 +1,4 @@
 import * as ChartJS from 'chart.js';
-import { AnyObject } from 'chart.js/dist/types/basic';
 
 /**
  * Utility class for color manipulation and gradient creation in Chart.js plugins.
@@ -256,6 +255,29 @@ export class AreaController extends ChartJS.LineController {
             line.options.borderColor = this.dataset.color;
             line.options.backgroundColor = ColorUtils.toRGBA( this.dataset.color, this.dataset.fillOpacity );
         }
+
+        meta.data.forEach( ( point: any, index ) => {
+            point.options = this.resolveDataElementOptions( index, mode );
+
+            if ( this.dataset.colorPointsByValue ) {
+                const parsed = this.getParsed( index ) as { y: number };
+                const pointColor = ColorUtils.getColorForValue(
+                    parsed.y, this.dataset.colorZones, this.dataset.color,
+                    this.dataset.negativeColor, this.dataset.threshold || 0
+                );
+
+                if ( pointColor ) {
+                    const rgbaColor = ColorUtils.toRGBA( pointColor, this.dataset.pointOpacity || 1 );
+                    const rgbaBorder = ColorUtils.toRGBA( pointColor, 1 );
+
+                    point.options = { ...point.options,
+                        backgroundColor: rgbaColor, borderColor: rgbaBorder,
+                        hoverBackgroundColor: rgbaColor,
+                        hoverBorderColor: rgbaBorder
+                    };
+                }
+            }
+        } );
     }
 
 }
