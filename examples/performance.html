@@ -53,8 +53,6 @@
             <label for="dataPoints">Number of Data Points: </label>
             <input type="number" id="dataPoints" value="1000" min="100" max="10000" step="100">
             <button onclick="generateChart()">Generate Chart</button>
-            <button onclick="animateChart()">Animate</button>
-            <button onclick="updateData()">Update Data</button>
         </div>
         <div class="stats" id="stats">
             Ready to generate chart...
@@ -66,14 +64,11 @@
             let chart;
             let renderTime = 0;
 
-            function generateLargeData ( points ) {
-                const labels = [], data = [];
+            function generateLargeData ( points, offset = 0 ) {
+                const labels = [], data = []; let last = 0;
                 for ( let i = 0; i < points; i++ ) {
                     labels.push( i );
-                    data.push(
-                        Math.sin( i * 0.01 ) * 20 + Math.cos( i * 0.007 ) * 20 +
-                        Math.sin( i * 0.003 ) * 20 + ( Math.random() - 0.5 ) * 10
-                    );
+                    data.push( last += offset + ( Math.random() - 0.5 ) * 10 );
                 }
                 return { labels, data };
             }
