@@ -33,7 +33,12 @@ class ColorUtils {
         threshold: number,
         scale: ChartJS.Scale,
         fillOpacity: number
-    ) : CanvasGradient {}
+    ) : CanvasGradient {
+        return this.createMultiBandGradient( ctx, chartArea, [
+            { from: scale.max, to: threshold, color: color },
+            { from: threshold, to: scale.min, color: negativeColor }
+        ], scale, fillOpacity );
+    }
 
 }
 
