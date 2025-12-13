@@ -71,11 +71,64 @@
                 for ( let i = 0; i < points; i++ ) {
                     labels.push( i );
                     data.push(
-                        Math.sin( i * 0.01 ) * 50 + Math.cos( i * 0.007 ) * 30 +
+                        Math.sin( i * 0.01 ) * 20 + Math.cos( i * 0.007 ) * 20 +
                         Math.sin( i * 0.003 ) * 20 + ( Math.random() - 0.5 ) * 10
                     );
                 }
                 return { labels, data };
+            }
+
+            function generateChart () {
+                const startTime = performance.now();
+                const points = parseInt( document.getElementById( 'dataPoints' ).value );
+                const { labels, data } = generateLargeData( points );
+
+                if ( chart ) chart.destroy();
+                const ctx = document.getElementById( 'performanceChart' ).getContext( '2d' );
+                chart = new Chart( ctx, {
+                    type: 'area',
+                    data: {
+                        labels: labels,
+                        datasets: [ {
+                            label: `Large Dataset (${points} points)`,
+                            data: data,
+                            color: '#3498db',
+                            negativeColor: '#e74c3c',
+                            threshold: 0,
+                            fillOpacity: 0.3,
+                            borderWidth: 1,
+                            pointRadius: 0,
+                            pointHoverRadius: 0
+                        } ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        plugins: {
+                            legend: false
+                        },
+                        scales: {
+                            x: {
+                                display: false
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        }
+                    }
+                } );
+
+                const endTime = performance.now();
+                renderTime = endTime - startTime;
+                //updateStats();
             }
         </script>
     </body>
