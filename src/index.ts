@@ -163,6 +163,10 @@ export class AreaController extends ChartJS.LineController {
                 }
             }
         }
+
+        meta.data.forEach( ( point: any, index ) => {
+            point.options = this.resolveDataElementOptions( index, mode );
+        } );
     }
 
 }
