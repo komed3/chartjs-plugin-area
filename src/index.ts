@@ -1,4 +1,5 @@
 import * as ChartJS from 'chart.js';
+import { AnyObject } from 'chart.js/dist/types/basic';
 
 /**
  * Utility class for color manipulation and gradient creation in Chart.js plugins.
@@ -217,71 +218,44 @@ export class AreaController extends ChartJS.LineController {
      * Updates the chart elements, applying gradients and point colors.
      * @param mode - The update mode
      */
-    public update ( mode: 'default' | 'resize' | 'active' | 'hide' | 'show' | 'none' | 'reset' ) : void {
+    public update ( mode: ChartJS.UpdateMode ) : void {
         super.update( mode );
 
         const meta = this.getMeta();
         const yAxisID = meta.yAxisID || 'y';
         const scale = this.getScaleForId( yAxisID );
-
-        if ( ! scale ) return;
-    
         const line = meta.dataset;
-        if ( line ) {
-            line.options = this.resolveDatasetElementOptions( mode );
 
-            if ( this.dataset.negativeColor || this.dataset.colorZones ) {
-                const chart = this.chart;
-                const chartArea = chart.chartArea;
-                const ctx = chart.ctx;
+        if ( ! scale || ! line ) return;
+    
+        line.options = this.resolveDatasetElementOptions( mode );
 
-                if ( this.dataset.colorZones ) {
-                    line.options.borderColor = ColorUtils.createMultiBandGradient(
-                        ctx, chartArea, scale, this.dataset.colorZones, 1
-                    );
-                    line.options.backgroundColor = ColorUtils.createMultiBandGradient(
-                        ctx, chartArea, scale, this.dataset.colorZones, this.dataset.fillOpacity || 0.6
-                    );
-                } else if ( this.dataset.color && this.dataset.negativeColor ) {
-                    line.options.borderColor = ColorUtils.createThresholdGradient(
-                        ctx, chartArea, scale, this.dataset.color, this.dataset.negativeColor,
-                        this.dataset.threshold || 0, 1
-                    );
-                    line.options.backgroundColor = ColorUtils.createThresholdGradient(
-                        ctx, chartArea, scale, this.dataset.color, this.dataset.negativeColor,
-                        this.dataset.threshold || 0, this.dataset.fillOpacity || 0.6
-                    );
-                }
-            } else if ( this.dataset.color ) {
-                line.options.borderColor = this.dataset.color;
-                line.options.backgroundColor = ColorUtils.toRGBA( this.dataset.color, this.dataset.fillOpacity );
-            }
-        }
+        if ( this.dataset.negativeColor || this.dataset.colorZones ) {
+            const chart = this.chart;
+            const chartArea = chart.chartArea;
+            const ctx = chart.ctx;
 
-        meta.data.forEach( ( point: any, index ) => {
-            point.options = this.resolveDataElementOptions( index, mode );
-
-            if ( this.dataset.colorPointsByValue ) {
-                const parsed = this.getParsed( index ) as { y: number };
-                const pointColor = ColorUtils.getColorForValue(
-                    parsed.y, this.dataset.colorZones, this.dataset.color,
-                    this.dataset.negativeColor, this.dataset.threshold || 0
+            if ( this.dataset.colorZones ) {
+                line.options.borderColor = ColorUtils.createMultiBandGradient(
+                    ctx, chartArea, scale, this.dataset.colorZones, 1
                 );
-
-                if ( pointColor ) {
-                    const rgbaColor = ColorUtils.toRGBA( pointColor, this.dataset.pointOpacity || 1 );
-                    const rgbaBorder = ColorUtils.toRGBA( pointColor, 1 );
-
-                    point.options = { ...point.options,
-                        backgroundColor: rgbaColor, borderColor: rgbaBorder,
-                        hoverBackgroundColor: this.dataset.hoverState
-                            ? point.options.hoverBackgroundColor : rgbaColor,
-                        hoverBorderColor: this.dataset.hoverState
-                            ? point.options.hoverBorderColor : rgbaBorder
-                    };
-                }
+                line.options.backgroundColor = ColorUtils.createMultiBandGradient(
+                    ctx, chartArea, scale, this.dataset.colorZones, this.dataset.fillOpacity || 0.6
+                );
+            } else if ( this.dataset.color && this.dataset.negativeColor ) {
+                line.options.borderColor = ColorUtils.createThresholdGradient(
+                    ctx, chartArea, scale, this.dataset.color, this.dataset.negativeColor,
+                    this.dataset.threshold || 0, 1
+                );
+                line.options.backgroundColor = ColorUtils.createThresholdGradient(
+                    ctx, chartArea, scale, this.dataset.color, this.dataset.negativeColor,
+                    this.dataset.threshold || 0, this.dataset.fillOpacity || 0.6
+                );
             }
-        } );
+        } else if ( this.dataset.color ) {
+            line.options.borderColor = this.dataset.color;
+            line.options.backgroundColor = ColorUtils.toRGBA( this.dataset.color, this.dataset.fillOpacity );
+        }
     }
 
 }
