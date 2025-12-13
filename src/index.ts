@@ -243,29 +243,42 @@ export class AreaController extends ChartJS.LineController {
             line.options.backgroundColor = ColorUtils.toRGBA( this.dataset.color, this.dataset.fillOpacity );
         }
 
-        meta.data.forEach( ( point: any, index ) => {
-            point.options = this.resolveDataElementOptions( index, mode );
+        if ( this.dataset.colorPointsByValue ) {
+            const ds = this.getDataset() as AreaChartDatasetOptions;
 
-            if ( this.dataset.colorPointsByValue ) {
-                const parsed = this.getParsed( index ) as { y: number };
-                const pointColor = ColorUtils.getColorForValue(
-                    parsed.y, this.dataset.colorZones, this.dataset.color,
-                    this.dataset.negativeColor, this.dataset.threshold || 0
+            ds.pointBackgroundColor = (ctx: any) => {
+                const y = ctx.parsed?.y;
+                if (y == null) return undefined;
+
+                const c = ColorUtils.getColorForValue(
+                    y,
+                    ds.colorZones,
+                    ds.color,
+                    ds.negativeColor,
+                    ds.threshold ?? 0
                 );
 
-                if ( pointColor ) {
-                    const rgbaColor = ColorUtils.toRGBA( pointColor, this.dataset.pointOpacity || 1 );
-                    const rgbaBorder = ColorUtils.toRGBA( pointColor, 1 );
+                return c ? ColorUtils.toRGBA(c, ds.pointOpacity ?? 1) : undefined;
+            };
 
-                    point.options = { ...point.options,
-                        backgroundColor: rgbaColor,
-                        borderColor: rgbaBorder,
-                        hoverBackgroundColor: rgbaColor,
-                        hoverBorderColor: rgbaBorder
-                    };
-                }
-            }
-        } );
+            ds.pointBorderColor = (ctx: any) => {
+                const y = ctx.parsed?.y;
+                if (y == null) return undefined;
+
+                const c = ColorUtils.getColorForValue(
+                    y,
+                    ds.colorZones,
+                    ds.color,
+                    ds.negativeColor,
+                    ds.threshold ?? 0
+                );
+
+                return c ? ColorUtils.toRGBA(c, 1) : undefined;
+            };
+
+            ds.pointHoverBackgroundColor = ds.pointBackgroundColor;
+            ds.pointHoverBorderColor = ds.pointBorderColor;
+        }
     }
 
 }
