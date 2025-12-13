@@ -112,7 +112,7 @@ class ColorUtils {
         } else if ( color && negativeColor ) {
             return value >= threshold ? color : negativeColor;
         }
-        return undefined;
+        return color ?? negativeColor ?? undefined;
     }
 
 }
