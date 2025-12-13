@@ -1,7 +1,16 @@
 import * as ChartJS from 'chart.js';
 
+/**
+ * Utility class for color manipulation and gradient creation in Chart.js plugins.
+ */
 class ColorUtils {
 
+    /**
+     * Converts a color to RGBA format with specified alpha.
+     * @param color - The input color (string or Chart.js Color object)
+     * @param alpha - The alpha value (0-1)
+     * @returns The color in RGBA string format
+     */
     public static toRGBA ( color: ChartJS.Color, alpha: number = 1 ) : string {
         if ( typeof color === 'string' ) {
             if ( color.startsWith( '#' ) ) {
@@ -17,6 +26,15 @@ class ColorUtils {
         return color.toString();
     }
 
+    /**
+     * Creates a multi-band linear gradient based on value zones.
+     * @param ctx - The canvas rendering context
+     * @param chartArea - The chart area dimensions
+     * @param scale - The scale used for value-to-pixel conversion
+     * @param zones - Array of zones with from, to, and color
+     * @param fillOpacity - Opacity for the fill (0-1)
+     * @returns The created linear gradient
+     */
     public static createMultiBandGradient (
         ctx: CanvasRenderingContext2D,
         chartArea: ChartJS.ChartArea,
@@ -45,6 +63,17 @@ class ColorUtils {
         return gradient;
     }
 
+    /**
+     * Creates a threshold-based gradient for positive and negative values.
+     * @param ctx - The canvas rendering context
+     * @param chartArea - The chart area dimensions
+     * @param scale - The scale used for value-to-pixel conversion
+     * @param color - Color for positive values
+     * @param negativeColor - Color for negative values
+     * @param threshold - The threshold value
+     * @param fillOpacity - Opacity for the fill (0-1)
+     * @returns The created linear gradient
+     */
     public static createThresholdGradient (
         ctx: CanvasRenderingContext2D,
         chartArea: ChartJS.ChartArea,
@@ -62,6 +91,9 @@ class ColorUtils {
 
 }
 
+/**
+ * Declare the Area chart type in Chart.js registry.
+ */
 declare module 'chart.js' {
     interface ChartTypeRegistry {
         area: {
@@ -78,22 +110,43 @@ declare module 'chart.js' {
     }
 }
 
+/**
+ * Extended dataset options for the Area chart controller.
+ * Supports color zones, thresholds, and point coloring based on values.
+ */
 export interface AreaChartDatasetOptions extends ChartJS.LineControllerDatasetOptions {
+    /** Default color for positive values or zones */
     color?: ChartJS.Color;
+    /** Color for negative values when using threshold mode */
     negativeColor?: ChartJS.Color;
+    /** Threshold value for positive/negative coloring */
     threshold?: number;
+    /** Opacity for the fill area (0-1) */
     fillOpacity?: number;
+    /** Whether to apply hover state colors */
     hoverState?: boolean;
+    /** Array of color zones for multi-band coloring */
     colorZones?: Array< {
         from: number;
         to: number;
         color: ChartJS.Color;
     } >;
+    /** Whether to color points based on their value */
+    colorPointsByValue?: boolean;
+    /** Opacity for point colors (0-1) */
+    pointOpacity?: number;
 }
 
+/**
+ * Controller for rendering area charts with dynamic coloring based on value zones or thresholds.
+ * Extends the LineController to provide filled areas with gradient colors.
+ */
 export class AreaController extends ChartJS.LineController {
 
+    /** Unique identifier for the Area chart controller. */
     static readonly id = 'area';
+
+    /** Default dataset options for the Area chart controller. */
     static readonly defaults = {
         datasetElementType: 'line',
         dataElementType: 'point',
@@ -105,32 +158,47 @@ export class AreaController extends ChartJS.LineController {
         threshold: 0,
         showLine: true,
         fillOpacity: 0.6,
-        hoverState: false
+        hoverState: false,
+        colorPointsByValue: true,
+        pointOpacity: 1
     };
 
+    /** Dataset options specific to the Area chart controller. */
+    protected dataset!: AreaChartDatasetOptions;
+
+    /**
+     * Initializes the controller and sets up default colors.
+     */
     public initialize () : void {
         super.initialize();
-        const dataset = this.getDataset() as AreaChartDatasetOptions;
 
-        if ( dataset.showLine === false ) dataset.borderWidth = 0;
-        if ( dataset.color ) {
-            dataset.borderColor ||= dataset.color;
-            dataset.backgroundColor ||= ColorUtils.toRGBA(
-                dataset.color, dataset.fillOpacity ||= 0.6
+        this.dataset = {
+            ...AreaController.defaults,
+            ...this.getDataset()
+        } as AreaChartDatasetOptions;
+
+        if ( this.dataset.showLine === false ) this.dataset.borderWidth = 0;
+        if ( this.dataset.color ) {
+            this.dataset.borderColor ||= this.dataset.color;
+            this.dataset.backgroundColor ||= ColorUtils.toRGBA(
+                this.dataset.color, this.dataset.fillOpacity ||= 0.6
             );
 
-            if ( ! dataset.hoverState ) {
-                dataset.hoverBorderColor ||= dataset.borderColor;
-                dataset.hoverBackgroundColor ||= dataset.backgroundColor;
+            if ( ! this.dataset.hoverState ) {
+                this.dataset.hoverBorderColor ||= this.dataset.borderColor;
+                this.dataset.hoverBackgroundColor ||= this.dataset.backgroundColor;
             }
         }
     }
 
+    /**
+     * Updates the chart elements, applying gradients and point colors.
+     * @param mode - The update mode
+     */
     public update ( mode: 'default' | 'resize' | 'active' | 'hide' | 'show' | 'none' | 'reset' ) : void {
         super.update( mode );
 
         const meta = this.getMeta();
-        const dataset = this.getDataset() as AreaChartDatasetOptions;
         const yAxisID = meta.yAxisID || 'y';
         const scale = this.getScaleForId( yAxisID );
 
@@ -140,36 +208,35 @@ export class AreaController extends ChartJS.LineController {
         if ( line ) {
             line.options = this.resolveDatasetElementOptions( mode );
 
-            if ( dataset.negativeColor || dataset.colorZones ) {
+            if ( this.dataset.negativeColor || this.dataset.colorZones ) {
                 const chart = this.chart;
                 const chartArea = chart.chartArea;
                 const ctx = chart.ctx;
 
-                if ( dataset.colorZones ) {
+                if ( this.dataset.colorZones ) {
                     line.options.borderColor = ColorUtils.createMultiBandGradient(
-                        ctx, chartArea, scale, dataset.colorZones, 1
+                        ctx, chartArea, scale, this.dataset.colorZones, 1
                     );
                     line.options.backgroundColor = ColorUtils.createMultiBandGradient(
-                        ctx, chartArea, scale, dataset.colorZones, dataset.fillOpacity || 0.6
+                        ctx, chartArea, scale, this.dataset.colorZones, this.dataset.fillOpacity || 0.6
                     );
-                } else if ( dataset.color && dataset.negativeColor ) {
+                } else if ( this.dataset.color && this.dataset.negativeColor ) {
                     line.options.borderColor = ColorUtils.createThresholdGradient(
-                        ctx, chartArea, scale, dataset.color, dataset.negativeColor,
-                        dataset.threshold || 0, 1
+                        ctx, chartArea, scale, this.dataset.color, this.dataset.negativeColor,
+                        this.dataset.threshold || 0, 1
                     );
                     line.options.backgroundColor = ColorUtils.createThresholdGradient(
-                        ctx, chartArea, scale, dataset.color, dataset.negativeColor,
-                        dataset.threshold || 0, dataset.fillOpacity || 0.6
+                        ctx, chartArea, scale, this.dataset.color, this.dataset.negativeColor,
+                        this.dataset.threshold || 0, this.dataset.fillOpacity || 0.6
                     );
                 }
             }
         }
-
-        meta.data.forEach( ( point: any, index ) => {
-            point.options = this.resolveDataElementOptions( index, mode );
-        } );
     }
 
 }
 
+/**
+ * Register the AreaController with Chart.js
+ */
 ChartJS.registry.addControllers( AreaController );
