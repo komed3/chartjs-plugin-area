@@ -9,6 +9,15 @@
     "url": "https://komed3.de"
   },
   "homepage": "https://github.com/komed3/chartjs-plugin-area",
+  "keywords": [
+    "chart.js",
+    "chart.js-plugin",
+    "chart.js-controller",
+    "area-chart",
+    "area-chart-controller",
+    "dual-threshold",
+    "multi-band-zones"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/komed3/chartjs-plugin-area.git"
