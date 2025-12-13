@@ -112,6 +112,7 @@ export class AreaController extends ChartJS.LineController {
         super.initialize();
         const dataset = this.getDataset() as AreaChartDatasetOptions;
 
+        if ( dataset.showLine === false ) dataset.borderWidth = 0;
         if ( dataset.color ) {
             dataset.borderColor ||= dataset.color;
             dataset.backgroundColor ||= ColorUtils.toRGBA(
