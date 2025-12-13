@@ -115,9 +115,6 @@
                 },
                 options: {
                     plugins: {
-                        legend: {
-                            display: true
-                        },
                         tooltip: {
                             callbacks: {
                                 label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed( 1 )}°C`
@@ -132,6 +129,39 @@
                             },
                             grid: {
                                 color: ctx => ctx.tick.value === 0 ? '#666' : '#e0e0e0'
+                            }
+                        }
+                    }
+                }
+            } );
+
+            // Multi-band Color Zones
+            const multiBandCtx = document.getElementById( 'multiBandChart' ).getContext( '2d' );
+            new Chart( multiBandCtx, {
+                type: 'area',
+                data: {
+                    labels: labels,
+                    datasets: [ {
+                        label: 'Performance Score',
+                        data: generateData( 12, 40, 50 ),
+                        colorZones: [
+                            { from: -Infinity, to: 30, color: '#ff4757' },  // Critical
+                            { from: 30, to: 50, color: '#ffa502' },         // Warning
+                            { from: 50, to: 70, color: '#ffdd59' },         // Caution
+                            { from: 70, to: 85, color: '#26de81' },         // Good
+                            { from: 85, to: Infinity, color: '#20bf6b' }    // Excellent
+                        ],
+                        fillOpacity: 0.6
+                    } ]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Performance Score'
                             }
                         }
                     }
