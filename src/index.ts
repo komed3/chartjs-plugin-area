@@ -1,8 +1,14 @@
 import * as ChartJS from 'chart.js';
 
+/**
+ * Defines a color zone for the Area chart.
+ */
 export interface AreaChartColorZone {
+    /** Starting value of the zone */
     from: number;
+    /** Ending value of the zone */
     to: number;
+    /** Color associated with the zone */
     color: ChartJS.Color
 }
 
@@ -10,14 +16,22 @@ export interface AreaChartColorZone {
  * Extended dataset options for the Area chart controller.
  */
 export interface AreaChartDatasetOptions extends ChartJS.LineControllerDatasetOptions {
+    /** Color for positive values */
     color?: ChartJS.Color;
+    /** Color for negative values */
     negativeColor?: ChartJS.Color;
+    /** Threshold value to separate positive and negative colors (default: 0) */
     threshold?: number;
+    /** Opacity for the fill area (0-1, default: 0.6) */
     fillOpacity?: number;
+    /** Whether to enable hover state styling (default: false) */
     hoverState?: boolean;
+    /** Whether to color points based on their values (default: true) */
     colorPointsByValue?: boolean;
+    /** Opacity for the data points (0-1, default: 1) */
     pointOpacity?: number;
-    colorZones?: Array<AreaChartColorZone>;
+    /** Array of color zones for dynamic coloring */
+    colorZones?: Array< AreaChartColorZone >;
 }
 
 /**
@@ -28,7 +42,7 @@ declare module 'chart.js' {
         area: {
             chartOptions: ChartJS.LineControllerChartOptions;
             datasetOptions: AreaChartDatasetOptions;
-            defaultDataPoint: number | [number, number] | null;
+            defaultDataPoint: number | [ number, number ] | null;
             metaExtensions: {};
             parsedDataType: { x: number; y: number };
             scales: keyof ChartJS.CartesianScaleTypeRegistry;
@@ -144,8 +158,9 @@ class ColorUtils {
         negativeColor?: ChartJS.Color,
         threshold: number = 0
     ) : ChartJS.Color | undefined {
-        for ( const zone of zones ?? [] ) if ( value >= zone.from && value <= zone.to ) return zone.color;
-        return value < threshold ? negativeColor : color;
+        return zones?.find( zone => value >= zone.from && value <= zone.to )?.color || (
+            value < threshold ? negativeColor : color
+        );
     }
 
 }
