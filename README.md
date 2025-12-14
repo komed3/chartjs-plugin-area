@@ -49,6 +49,7 @@ const chart = new ChartJS( ctx, {
 - **`threshold`** `< number, default: 0 >` – Threshold value to separate positive and negative colors.
 - **`fillOpacity`** `< number, 0-1, default: 0.6 >` – Opacity for the fill area.
 - **`hoverState`** `< boolean, default: false >` – Enable hover state styling.
+- **`hidePoints`** `< boolean, default: false >` – Hide data points on the chart.
 - **`colorPointsByValue`** `< boolean, default: true >` – Color points based on their values.
 - **`pointOpacity`** `< number, 0-1, default: 1 >` – Opacity for data points.
 - **`colorZones`** `< AreaChartColorZone[] >` – Array of color zones for dynamic coloring.
