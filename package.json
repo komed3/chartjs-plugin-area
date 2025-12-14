@@ -45,8 +45,7 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "chart.js": "^4.5.1",
-    "color": "^5.0.3"
+    "chart.js": "^4.5.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^29.0.0",
