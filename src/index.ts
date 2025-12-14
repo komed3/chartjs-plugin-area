@@ -215,6 +215,7 @@ export class AreaController extends ChartJS.LineController {
 
     /**
      * Applies gradient or solid colors to line and background.
+     * Allows for user overrides for borderColor and backgroundColor.
      * @param line - The line element
      * @param ctx - The canvas rendering context
      * @param chartArea - The chart area dimensions
@@ -226,32 +227,32 @@ export class AreaController extends ChartJS.LineController {
         chartArea: ChartJS.ChartArea,
         scale: ChartJS.Scale
     ) : void {
-        const { color, negativeColor, colorZones, fillOpacity = 0.6 } = this.dataset;
+        const { color, negativeColor, colorZones, fillOpacity = 0.6, threshold = 0 } = this.dataset;
+        const o = line.options;
 
-        // Apply multi-band gradient if color zones are defined
+        const set = ( key: 'borderColor' | 'backgroundColor', value: any ) => {
+            if ( o[ key ] == null ) o[ key ] = value;
+        };
+
         if ( colorZones ) {
-            line.options.borderColor = ColorUtils.createMultiBandGradient(
+            set( 'borderColor', ColorUtils.createMultiBandGradient(
                 ctx, chartArea, scale, colorZones, 1
-            );
-            line.options.backgroundColor = ColorUtils.createMultiBandGradient(
+            ) );
+            set( 'backgroundColor', ColorUtils.createMultiBandGradient(
                 ctx, chartArea, scale, colorZones, fillOpacity
-            );
+            ) );
         }
-
-        // Apply threshold gradient if positive and negative colors are defined
         else if ( color && negativeColor ) {
-            line.options.borderColor = ColorUtils.createThresholdGradient(
-                ctx, chartArea, scale, color, negativeColor, this.dataset.threshold || 0, 1
-            );
-            line.options.backgroundColor = ColorUtils.createThresholdGradient(
-                ctx, chartArea, scale, color, negativeColor, this.dataset.threshold || 0, fillOpacity
-            );
+            set( 'borderColor', ColorUtils.createThresholdGradient(
+                ctx, chartArea, scale, color, negativeColor, threshold, 1
+            ) );
+            set( 'backgroundColor', ColorUtils.createThresholdGradient(
+                ctx, chartArea, scale, color, negativeColor, threshold, fillOpacity
+            ) );
         }
-
-        // Apply solid color if only one color is defined
         else if ( color ) {
-            line.options.borderColor = ColorUtils.rgba( color );
-            line.options.backgroundColor = ColorUtils.rgba( color, fillOpacity );
+            set( 'borderColor', ColorUtils.rgba( color ) );
+            set( 'backgroundColor', ColorUtils.rgba( color, fillOpacity ) );
         }
     }
 
