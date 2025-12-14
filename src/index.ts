@@ -167,9 +167,8 @@ class ColorUtils {
         negativeColor?: ChartJS.Color,
         threshold: number = 0
     ) : ChartJS.Color | undefined {
-        return zones?.find( zone => value >= zone.from && value <= zone.to )?.color || (
-            value < threshold ? negativeColor : color
-        );
+        for ( const z of zones ?? [] ) if ( value >= z.from && value <= z.to ) return z.color;
+        return value < threshold && negativeColor ? negativeColor : color;
     }
 
 }
@@ -228,10 +227,8 @@ export class AreaController extends ChartJS.LineController {
         scale: ChartJS.Scale
     ) : void {
         const { color, negativeColor, colorZones, fillOpacity = 0.6, threshold = 0 } = this.dataset;
-        const o = line.options;
-
         const set = ( key: 'borderColor' | 'backgroundColor', value: any ) => {
-            if ( o[ key ] == null ) o[ key ] = value;
+            if ( this.dataset[ key ] == null ) line.options[ key ] = value;
         };
 
         if ( colorZones ) {
