@@ -154,8 +154,9 @@ class ColorUtils {
             const start = ColorUtils.normalizePosition( z.from, scale, chartArea );
             const end = ColorUtils.normalizePosition( z.to, scale, chartArea );
             const color = ColorUtils.color( z.color, z.opacity ?? fillOpacity );
-            if ( ! smooth || ( start === end ? i : i + 1 ) !== last ) gradient.addColorStop( start, color );
-            if ( ! smooth || ( start === end ? i : i - 1 ) === last ) gradient.addColorStop( end, color );
+
+            if( ! smooth || i !== last ) gradient.addColorStop( start, color );
+            if( ! smooth || i === last ) gradient.addColorStop( end, color );
         } );
 
         return gradient;
