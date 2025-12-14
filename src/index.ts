@@ -38,6 +38,8 @@ export interface AreaChartDatasetOptions extends ChartJS.LineControllerDatasetOp
     pointOpacity?: number;
     /** Array of color zones for dynamic coloring */
     colorZones?: Array< AreaChartColorZone >;
+    /** Whether to apply smooth gradient transitions between zones (default: false) */
+    smoothGradient?: boolean;
 }
 
 /**
@@ -132,8 +134,8 @@ class ColorUtils {
      * @param chartArea - The chart area dimensions
      * @param scale - The scale used for value-to-pixel conversion
      * @param zones - Array of zones with from, to, and color
-     * @param fillOpacity - Opacity for the fill (0-1)
      * @param smooth - Whether to smooth transitions between zones
+     * @param fillOpacity - Opacity for the fill (0-1)
      * @returns The created linear gradient
      */
     public static createMultiBandGradient (
@@ -141,8 +143,8 @@ class ColorUtils {
         chartArea: ChartJS.ChartArea,
         scale: ChartJS.Scale,
         zones: Array< AreaChartColorZone >,
-        fillOpacity: number = 1,
-        smooth: boolean = false
+        smooth: boolean = false,
+        fillOpacity: number = 1
     ) : CanvasGradient {
         const gradient = ctx.createLinearGradient( 0, chartArea.top, 0, chartArea.bottom );
         const sortedZones = [ ...zones ].sort( ( a, b ) => b.from - a.from );
@@ -152,8 +154,8 @@ class ColorUtils {
             const start = ColorUtils.normalizePosition( z.from, scale, chartArea );
             const end = ColorUtils.normalizePosition( z.to, scale, chartArea );
             const color = ColorUtils.color( z.color, z.opacity ?? fillOpacity );
-            if ( ! smooth || i !== last ) gradient.addColorStop( start, color );
-            if ( ! smooth || i === last ) gradient.addColorStop( end, color );
+            if ( ! smooth || ( start === end ? i : i + 1 ) !== last ) gradient.addColorStop( start, color );
+            if ( ! smooth || ( start === end ? i : i - 1 ) === last ) gradient.addColorStop( end, color );
         } );
 
         return gradient;
@@ -189,7 +191,7 @@ class ColorUtils {
             from: threshold, to: threshold, color: thresholdColor
         } );
         return ColorUtils.createMultiBandGradient(
-            ctx, chartArea, scale, zones, fillOpacity, thresholdColor != null
+            ctx, chartArea, scale, zones, thresholdColor != null, fillOpacity
         );
     }
 
@@ -238,7 +240,8 @@ export class AreaController extends ChartJS.LineController {
         fillOpacity: 0.6,
         hoverState: false,
         colorPointsByValue: true,
-        pointOpacity: 1
+        pointOpacity: 1,
+        smoothGradient: false
     };
 
     /** Extended dataset options specific to Area chart */
@@ -269,13 +272,16 @@ export class AreaController extends ChartJS.LineController {
         chartArea: ChartJS.ChartArea,
         scale: ChartJS.Scale
     ) : void {
-        const { color, negativeColor, colorZones, fillOpacity = 0.6, threshold = 0, thresholdColor } = this.dataset;
+        const {
+            color, negativeColor, colorZones, fillOpacity = 0.6, threshold = 0,
+            thresholdColor, smoothGradient = false
+        } = this.dataset;
         const set = ( key: 'borderColor' | 'backgroundColor', fn: Function, ...args: any[] ) => {
             if ( this.dataset[ key ] == null ) line.options[ key ] = fn( ...args );
         };
 
         if ( colorZones ) {
-            const args = [ ctx, chartArea, scale, colorZones ];
+            const args = [ ctx, chartArea, scale, colorZones, smoothGradient ];
             set( 'borderColor', ColorUtils.createMultiBandGradient, ...args, 1 );
             set( 'backgroundColor', ColorUtils.createMultiBandGradient, ...args, fillOpacity );
         }
