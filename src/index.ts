@@ -57,23 +57,17 @@ declare module 'chart.js' {
  */
 class ColorUtils {
 
-    /**
-     * Converts a color to RGBA format with specified alpha.
-     * @param color - The input color (string or Chart.js Color object)
-     * @param alpha - The alpha value (0-1)
-     * @returns The color in RGBA string format
-     */
-    public static rgba (
-        color: ChartJS.Color,
-        alpha: number = 1
-    ) : string {
-        if ( typeof color !== 'string' ) return color.toString();
-        if ( color.startsWith( 'rgb' ) ) return color.replace( /rgba?\(([^)]+)\)/, `rgba($1, ${alpha})` );
-        if ( color.startsWith( '#' ) ) {
-            const [ r, g, b ] = [ 1, 3, 5 ].map( i => parseInt( color.slice( i, i + 2 ), 16 ) );
-            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-        }
-        return color;
+    private static readonly RGB = /^rgba?\(\s*(\d{1,3}(?:\.\d+)?)\s*(?:,\s*|\s+)\s*(\d{1,3}(?:\.\d+)?)\s*(?:,\s*|\s+)\s*(\d{1,3}(?:\.\d+)?)\s*(?:,\s*|\s+)?(?:\s*\/?\s*([\d.]+%?)\s*)?\)$/i;
+    private static readonly HSL = /^hsla?\(\s*([-+]?\d{1,3}(?:\.\d+)?)(deg|grad|rad|turn)?\s*(?:,\s*|\s+)\s*([-+]?\d{1,3}(?:\.\d+)?)%\s*(?:,\s*|\s+)\s*([-+]?\d{1,3}(?:\.\d+)?)%\s*(?:,\s*|\s+)?(?:\s*\/?\s*([\d.]+%?)\s*)?\)$/i;
+
+    private static injectAlpha (
+        color: string,
+        as: 'rgba' | 'hsla',
+        re: RegExp,
+        alpha: number
+    ) : string | undefined {
+        const match = color.trim().match( re );
+        if ( match ) return `${as}(${ match.slice( 0, 3 ).join( ',' ) },${alpha})`;
     }
 
     /**
@@ -92,6 +86,24 @@ class ColorUtils {
             ( scale.getPixelForValue( y ) - chartArea.top ) /
             ( chartArea.bottom - chartArea.top ) 
         ) );
+    }
+
+    /**
+     * Converts a color to RGBA format with specified alpha.
+     * @param color - The input color (string or Chart.js Color object)
+     * @param alpha - The alpha value (0-1)
+     * @returns The color in RGBA string format
+     */
+    public static rgba (
+        color: ChartJS.Color,
+        alpha: number = 1
+    ) : string {
+        if ( typeof color !== 'string' ) return String( color );
+        const rgba = this.injectAlpha( color, 'rgba', ColorUtils.RGB, alpha );
+        if ( rgba ) return rgba;
+        const hsla = this.injectAlpha( color, 'hsla', ColorUtils.HSL, alpha );
+        if ( hsla ) return hsla;
+        return color;
     }
 
     /**
