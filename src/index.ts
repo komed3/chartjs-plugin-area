@@ -114,9 +114,9 @@ class ColorUtils {
         const sortedZones = [ ...zones ].sort( ( a, b ) => b.from - a.from );
 
         sortedZones.forEach( zone => {
-            const color = this.rgba( zone.color, zone.opacity ?? fillOpacity );
-            const startPos = this.normalizePosition( zone.from, scale, chartArea );
-            const endPos = this.normalizePosition( zone.to, scale, chartArea );
+            const color = ColorUtils.rgba( zone.color, zone.opacity ?? fillOpacity );
+            const startPos = ColorUtils.normalizePosition( zone.from, scale, chartArea );
+            const endPos = ColorUtils.normalizePosition( zone.to, scale, chartArea );
 
             gradient.addColorStop( startPos, color );
             gradient.addColorStop( endPos, color );
@@ -145,7 +145,7 @@ class ColorUtils {
         threshold: number = 0,
         fillOpacity: number = 1
     ) : CanvasGradient {
-        return this.createMultiBandGradient( ctx, chartArea, scale, [
+        return ColorUtils.createMultiBandGradient( ctx, chartArea, scale, [
             { from: +Infinity, to: threshold, color },
             { from: threshold, to: -Infinity, color: negativeColor }
         ], fillOpacity );
@@ -227,29 +227,23 @@ export class AreaController extends ChartJS.LineController {
         scale: ChartJS.Scale
     ) : void {
         const { color, negativeColor, colorZones, fillOpacity = 0.6, threshold = 0 } = this.dataset;
-        const set = ( key: 'borderColor' | 'backgroundColor', value: any ) => {
-            if ( this.dataset[ key ] == null ) line.options[ key ] = value;
+        const set = ( key: 'borderColor' | 'backgroundColor', fn: Function, ...args: any[] ) => {
+            if ( this.dataset[ key ] == null ) line.options[ key ] = fn( ...args );
         };
 
         if ( colorZones ) {
-            set( 'borderColor', ColorUtils.createMultiBandGradient(
-                ctx, chartArea, scale, colorZones, 1
-            ) );
-            set( 'backgroundColor', ColorUtils.createMultiBandGradient(
-                ctx, chartArea, scale, colorZones, fillOpacity
-            ) );
+            const args = [ ctx, chartArea, scale, colorZones ];
+            set( 'borderColor', ColorUtils.createMultiBandGradient, ...args, 1 );
+            set( 'backgroundColor', ColorUtils.createMultiBandGradient, ...args, fillOpacity );
         }
         else if ( color && negativeColor ) {
-            set( 'borderColor', ColorUtils.createThresholdGradient(
-                ctx, chartArea, scale, color, negativeColor, threshold, 1
-            ) );
-            set( 'backgroundColor', ColorUtils.createThresholdGradient(
-                ctx, chartArea, scale, color, negativeColor, threshold, fillOpacity
-            ) );
+            const args = [ ctx, chartArea, scale, color, negativeColor, threshold ];
+            set( 'borderColor', ColorUtils.createThresholdGradient, ...args, 1 );
+            set( 'backgroundColor', ColorUtils.createThresholdGradient, ...args, fillOpacity );
         }
         else if ( color ) {
-            set( 'borderColor', ColorUtils.rgba( color ) );
-            set( 'backgroundColor', ColorUtils.rgba( color, fillOpacity ) );
+            set( 'borderColor', ColorUtils.rgba, color );
+            set( 'backgroundColor', ColorUtils.rgba, color, fillOpacity );
         }
     }
 
