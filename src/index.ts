@@ -28,6 +28,8 @@ export interface AreaChartDatasetOptions extends ChartJS.LineControllerDatasetOp
     fillOpacity?: number;
     /** Whether to enable hover state styling (default: false) */
     hoverState?: boolean;
+    /** Whether to hide data points (default: false) */
+    hidePoints?: boolean;
     /** Whether to color points based on their values (default: true) */
     colorPointsByValue?: boolean;
     /** Opacity for the data points (0-1, default: 1) */
@@ -221,6 +223,7 @@ export class AreaController extends ChartJS.LineController {
         pointHoverRadius: 5,
         threshold: 0,
         showLine: true,
+        hidePoints: false,
         fillOpacity: 0.6,
         hoverState: false,
         colorPointsByValue: true,
@@ -296,6 +299,17 @@ export class AreaController extends ChartJS.LineController {
     }
 
     /**
+     * Hides all data points by setting their radius to zero.
+     */
+    private hidePoints () : void {
+        const meta = this.getMeta();
+        for ( const point of meta.data ?? [] ) {
+            point.options.radius = 0;
+            point.options.hoverRadius = 0;
+        }
+    }
+
+    /**
      * Applies point coloring based on values.
      */
     private applyPointColors () : void {
@@ -331,8 +345,10 @@ export class AreaController extends ChartJS.LineController {
             this.applyLineColors( line, ctx, chartArea, scale );
         }
 
+        // Hide points if configured (will remove hover state as well)
+        if ( this.dataset.hidePoints ) this.hidePoints();
         // Apply point colors based on values
-        if ( this.dataset.colorPointsByValue ) this.applyPointColors();
+        else if ( this.dataset.colorPointsByValue ) this.applyPointColors();
     }
 
 }
