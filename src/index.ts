@@ -285,13 +285,13 @@ export class AreaController extends ChartJS.LineController {
         isBackground: boolean
     ) : ( ctx: any ) => string | undefined {
         const { colorZones, color, negativeColor, threshold = 0, pointOpacity = 1 } = this.dataset;
-        const opacity = isBackground ? pointOpacity : 1;
 
         return ( ctx: any ) => {
             const y = ctx.parsed?.y;
             if ( y == null ) return undefined;
+
             const resolvedColor = ColorUtils.getColorForValue( y, colorZones, color, negativeColor, threshold );
-            return resolvedColor ? ColorUtils.color( resolvedColor, opacity ) : undefined;
+            return resolvedColor ? ColorUtils.color( resolvedColor, isBackground ? pointOpacity : 1 ) : undefined;
         };
     }
 
@@ -309,7 +309,13 @@ export class AreaController extends ChartJS.LineController {
         ds.pointHoverBorderColor = borderColorResolver;
     }
 
-    public update ( mode: ChartJS.UpdateMode ) : void {
+    /**
+     * Updates the chart elements with dynamic coloring and options.
+     * @param mode - The update mode
+     */
+    public update (
+        mode: ChartJS.UpdateMode
+    ) : void {
         super.update( mode );
 
         const meta = this.getMeta();
@@ -319,13 +325,8 @@ export class AreaController extends ChartJS.LineController {
 
         if ( ! scale || ! line ) return;
 
-        line.options = this.resolveDatasetElementOptions( mode );
-
-        // Hide line if showLine is false
-        if ( this.dataset.showLine === false ) line.options.borderWidth = 0;
-
         // Apply line and background colors
-        if ( this.dataset.negativeColor || this.dataset.colorZones || this.dataset.color ) {
+        if ( this.dataset.colorZones || this.dataset.color || this.dataset.negativeColor ) {
             const { ctx, chartArea } = this.chart;
             this.applyLineColors( line, ctx, chartArea, scale );
         }
@@ -333,6 +334,7 @@ export class AreaController extends ChartJS.LineController {
         // Apply point colors based on values
         if ( this.dataset.colorPointsByValue ) this.applyPointColors();
     }
+
 }
 
 /**
