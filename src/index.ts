@@ -177,8 +177,8 @@ class ColorUtils {
         fillOpacity: number = 1
     ) : CanvasGradient {
         return ColorUtils.createMultiBandGradient( ctx, chartArea, scale, [
-            { from: +Infinity, to: threshold, color },
-            { from: threshold, to: -Infinity, color: negativeColor }
+            { from: scale.max, to: threshold, color },
+            { from: threshold, to: scale.min, color: negativeColor }
         ], fillOpacity );
     }
 
