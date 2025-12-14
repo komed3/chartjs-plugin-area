@@ -47,6 +47,7 @@ const chart = new ChartJS( ctx, {
 - **`color`** `< ChartJS.Color >` – Color for positive values.
 - **`negativeColor`** `< ChartJS.Color >` – Color for negative values.
 - **`threshold`** `< number, default: 0 >` – Threshold value to separate positive and negative colors.
+- **`fill`** `< boolean, 'origin', 'start', 'end', default: 'origin' >` – Fill area under the line.
 - **`fillOpacity`** `< number, 0-1, default: 0.6 >` – Opacity for the fill area.
 - **`hoverState`** `< boolean, default: false >` – Enable hover state styling.
 - **`hidePoints`** `< boolean, default: false >` – Hide data points on the chart.
@@ -71,7 +72,7 @@ datasets: [ {
   color: '#4ecdc4',
   negativeColor: '#ff6b6b',
   threshold: 0
-}]
+} ]
 ```
 
 **Multi-Band Color Zones**
