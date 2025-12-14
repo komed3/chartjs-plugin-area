@@ -133,6 +133,7 @@ class ColorUtils {
      * @param scale - The scale used for value-to-pixel conversion
      * @param zones - Array of zones with from, to, and color
      * @param fillOpacity - Opacity for the fill (0-1)
+     * @param smooth - Whether to smooth transitions between zones
      * @returns The created linear gradient
      */
     public static createMultiBandGradient (
@@ -140,19 +141,19 @@ class ColorUtils {
         chartArea: ChartJS.ChartArea,
         scale: ChartJS.Scale,
         zones: Array< AreaChartColorZone >,
-        fillOpacity: number = 1
+        fillOpacity: number = 1,
+        smooth: boolean = false
     ) : CanvasGradient {
         const gradient = ctx.createLinearGradient( 0, chartArea.top, 0, chartArea.bottom );
         const sortedZones = [ ...zones ].sort( ( a, b ) => b.from - a.from );
+        const last = sortedZones.length - 1;
 
-        sortedZones.forEach( zone => {
-            const start = ColorUtils.normalizePosition( zone.from, scale, chartArea );
-            const end = ColorUtils.normalizePosition( zone.to, scale, chartArea );
-            if ( start === end ) return;
-
-            const color = ColorUtils.color( zone.color, zone.opacity ?? fillOpacity );
-            gradient.addColorStop( start, color );
-            gradient.addColorStop( end, color );
+        sortedZones.forEach( ( z, i ) => {
+            const start = ColorUtils.normalizePosition( z.from, scale, chartArea );
+            const end = ColorUtils.normalizePosition( z.to, scale, chartArea );
+            const color = ColorUtils.color( z.color, z.opacity ?? fillOpacity );
+            if ( ! smooth || i !== last ) gradient.addColorStop( start, color );
+            if ( ! smooth || i === last ) gradient.addColorStop( end, color );
         } );
 
         return gradient;
@@ -166,6 +167,7 @@ class ColorUtils {
      * @param color - Color for positive values
      * @param negativeColor - Color for negative values
      * @param threshold - The threshold value
+     * @param thresholdColor - Optional color to force gradient over threshold
      * @param fillOpacity - Opacity for the fill (0-1)
      * @returns The created linear gradient
      */
@@ -176,12 +178,19 @@ class ColorUtils {
         color: ChartJS.Color,
         negativeColor: ChartJS.Color,
         threshold: number = 0,
+        thresholdColor?: ChartJS.Color,
         fillOpacity: number = 1
     ) : CanvasGradient {
-        return ColorUtils.createMultiBandGradient( ctx, chartArea, scale, [
+        const zones = [
             { from: scale.max, to: threshold, color },
             { from: threshold, to: scale.min, color: negativeColor }
-        ], fillOpacity );
+        ];
+        if ( thresholdColor ) zones.splice( 1, 0, {
+            from: threshold, to: threshold, color: thresholdColor
+        } );
+        return ColorUtils.createMultiBandGradient(
+            ctx, chartArea, scale, zones, fillOpacity, thresholdColor != null
+        );
     }
 
     /**
@@ -260,7 +269,7 @@ export class AreaController extends ChartJS.LineController {
         chartArea: ChartJS.ChartArea,
         scale: ChartJS.Scale
     ) : void {
-        const { color, negativeColor, colorZones, fillOpacity = 0.6, threshold = 0 } = this.dataset;
+        const { color, negativeColor, colorZones, fillOpacity = 0.6, threshold = 0, thresholdColor } = this.dataset;
         const set = ( key: 'borderColor' | 'backgroundColor', fn: Function, ...args: any[] ) => {
             if ( this.dataset[ key ] == null ) line.options[ key ] = fn( ...args );
         };
@@ -272,8 +281,8 @@ export class AreaController extends ChartJS.LineController {
         }
         else if ( color && negativeColor ) {
             const args = [ ctx, chartArea, scale, color, negativeColor, threshold ];
-            set( 'borderColor', ColorUtils.createThresholdGradient, ...args, 1 );
-            set( 'backgroundColor', ColorUtils.createThresholdGradient, ...args, fillOpacity );
+            set( 'borderColor', ColorUtils.createThresholdGradient, ...args, undefined, 1 );
+            set( 'backgroundColor', ColorUtils.createThresholdGradient, ...args, thresholdColor, fillOpacity );
         }
         else if ( color ) {
             set( 'borderColor', ColorUtils.color, color );
