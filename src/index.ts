@@ -104,12 +104,12 @@ class ColorUtils {
     }
 
     /**
-     * Converts a color to RGBA format with specified alpha.
+     * Converts a color to RGBA/HSLA format with specified alpha.
      * @param color - The input color (string or Chart.js Color object)
      * @param alpha - The alpha value (0-1)
-     * @returns The color in RGBA string format
+     * @returns The color in RGBA/HSLA string format
      */
-    public static rgba (
+    public static color (
         color: ChartJS.Color,
         alpha: number = 1
     ) : string {
@@ -146,7 +146,7 @@ class ColorUtils {
             const end = ColorUtils.normalizePosition( zone.to, scale, chartArea );
             if ( start === end ) return;
 
-            const color = ColorUtils.rgba( zone.color, zone.opacity ?? fillOpacity );
+            const color = ColorUtils.color( zone.color, zone.opacity ?? fillOpacity );
             gradient.addColorStop( start, color );
             gradient.addColorStop( end, color );
         } );
@@ -271,8 +271,8 @@ export class AreaController extends ChartJS.LineController {
             set( 'backgroundColor', ColorUtils.createThresholdGradient, ...args, fillOpacity );
         }
         else if ( color ) {
-            set( 'borderColor', ColorUtils.rgba, color );
-            set( 'backgroundColor', ColorUtils.rgba, color, fillOpacity );
+            set( 'borderColor', ColorUtils.color, color );
+            set( 'backgroundColor', ColorUtils.color, color, fillOpacity );
         }
     }
 
@@ -291,7 +291,7 @@ export class AreaController extends ChartJS.LineController {
             const y = ctx.parsed?.y;
             if ( y == null ) return undefined;
             const resolvedColor = ColorUtils.getColorForValue( y, colorZones, color, negativeColor, threshold );
-            return resolvedColor ? ColorUtils.rgba( resolvedColor, opacity ) : undefined;
+            return resolvedColor ? ColorUtils.color( resolvedColor, opacity ) : undefined;
         };
     }
 
