@@ -24,6 +24,8 @@ export interface AreaChartDatasetOptions extends ChartJS.LineControllerDatasetOp
     negativeColor?: ChartJS.Color;
     /** Threshold value to separate positive and negative colors (default: 0) */
     threshold?: number;
+    /** Color to force gradient over threshold */
+    thresholdColor?: ChartJS.Color;
     /** Opacity for the fill area (0-1, default: 0.6) */
     fillOpacity?: number;
     /** Whether to enable hover state styling (default: false) */
