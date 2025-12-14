@@ -57,17 +57,32 @@ declare module 'chart.js' {
  */
 class ColorUtils {
 
+    /** Regular expressions for color formats */
     private static readonly RGB = /^rgba?\(\s*(\d{1,3}(?:\.\d+)?)\s*(?:,\s*|\s+)\s*(\d{1,3}(?:\.\d+)?)\s*(?:,\s*|\s+)\s*(\d{1,3}(?:\.\d+)?)\s*(?:,\s*|\s+)?(?:\s*\/?\s*([\d.]+%?)\s*)?\)$/i;
     private static readonly HSL = /^hsla?\(\s*([-+]?\d{1,3}(?:\.\d+)?)(deg|grad|rad|turn)?\s*(?:,\s*|\s+)\s*([-+]?\d{1,3}(?:\.\d+)?)%\s*(?:,\s*|\s+)\s*([-+]?\d{1,3}(?:\.\d+)?)%\s*(?:,\s*|\s+)?(?:\s*\/?\s*([\d.]+%?)\s*)?\)$/i;
+    private static readonly HEX34 = /^#([a-f\d])([a-f\d])([a-f\d])([a-f\d])?$/i;
+    private static readonly HEX68 = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i;
 
-    private static injectAlpha (
+    /**
+     * Parse colors and injects alpha channel into RGB(A) or HSL(A) color strings.
+     * @param color - The input color string
+     * @param as - The output format ('rgba' or 'hsla')
+     * @param re - The regular expression to match the color format
+     * @param alpha - The alpha value to inject (0-1)
+     * @param isHex - Whether the color components are in hexadecimal format
+     * @returns The color string with injected alpha or undefined if no match
+     */
+    private static parseColor (
         color: string,
         as: 'rgba' | 'hsla',
         re: RegExp,
-        alpha: number
+        alpha: number,
+        isHex: boolean = false
     ) : string | undefined {
         const match = color.trim().match( re );
-        if ( match ) return `${as}(${ match.slice( 0, 3 ).join( ',' ) },${alpha})`;
+        if ( match ) return `${as}(${ match.slice( 1, 4 ).map(
+            v => isHex ? parseInt( v.length === 1 ? v + v : v, 16 ) : v
+        ).join( ',' ) },${alpha})`;
     }
 
     /**
@@ -99,10 +114,11 @@ class ColorUtils {
         alpha: number = 1
     ) : string {
         if ( typeof color !== 'string' ) return String( color );
-        const rgba = this.injectAlpha( color, 'rgba', ColorUtils.RGB, alpha );
-        if ( rgba ) return rgba;
-        const hsla = this.injectAlpha( color, 'hsla', ColorUtils.HSL, alpha );
-        if ( hsla ) return hsla;
+        let res: string | undefined;
+        if ( res = ColorUtils.parseColor( color, 'rgba', ColorUtils.RGB, alpha ) ) return res;
+        if ( res = ColorUtils.parseColor( color, 'hsla', ColorUtils.HSL, alpha ) ) return res;
+        if ( res = ColorUtils.parseColor( color, 'rgba', ColorUtils.HEX34, alpha, true ) ) return res;
+        if ( res = ColorUtils.parseColor( color, 'rgba', ColorUtils.HEX68, alpha, true ) ) return res;
         return color;
     }
 
