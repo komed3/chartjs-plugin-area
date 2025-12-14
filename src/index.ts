@@ -59,7 +59,7 @@ class ColorUtils {
 
     /** Regular expressions for color formats */
     private static readonly RGB = /^rgba?\(\s*(\d{1,3}(?:\.\d+)?)\s*(?:,\s*|\s+)\s*(\d{1,3}(?:\.\d+)?)\s*(?:,\s*|\s+)\s*(\d{1,3}(?:\.\d+)?)\s*(?:,\s*|\s+)?(?:\s*\/?\s*([\d.]+%?)\s*)?\)$/i;
-    private static readonly HSL = /^hsla?\(\s*([-+]?\d{1,3}(?:\.\d+)?)(deg|grad|rad|turn)?\s*(?:,\s*|\s+)\s*([-+]?\d{1,3}(?:\.\d+)?)%\s*(?:,\s*|\s+)\s*([-+]?\d{1,3}(?:\.\d+)?)%\s*(?:,\s*|\s+)?(?:\s*\/?\s*([\d.]+%?)\s*)?\)$/i;
+    private static readonly HSL = /^hsla?\(\s*([-+]?\d{1,3}(?:\.\d+)?)(deg|grad|rad)?\s*(?:,\s*|\s+)\s*([-+]?\d{1,3}(?:\.\d+)?)%\s*(?:,\s*|\s+)\s*([-+]?\d{1,3}(?:\.\d+)?)%\s*(?:,\s*|\s+)?(?:\s*\/?\s*([\d.]+%?)\s*)?\)$/i;
     private static readonly HEX34 = /^#([a-f\d])([a-f\d])([a-f\d])([a-f\d])?$/i;
     private static readonly HEX68 = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i;
 
@@ -76,13 +76,13 @@ class ColorUtils {
         color: string,
         as: 'rgba' | 'hsla',
         re: RegExp,
-        alpha: number,
+        alpha: number = 1,
         isHex: boolean = false
     ) : string | undefined {
         const match = color.trim().match( re );
         if ( match ) return `${as}(${ match.slice( 1, 4 ).map(
             v => isHex ? parseInt( v.length === 1 ? v + v : v, 16 ) : v
-        ).join( ',' ) },${alpha})`;
+        ).join( ',' ) },${ match.slice( 4, 5 )[ 0 ] ?? alpha })`;
     }
 
     /**
@@ -97,9 +97,9 @@ class ColorUtils {
         scale: ChartJS.Scale,
         chartArea: ChartJS.ChartArea
     ) : number {
-        return Math.max( 0, Math.min( 1,
-            ( scale.getPixelForValue( y ) - chartArea.top ) /
-            ( chartArea.bottom - chartArea.top ) 
+        const range = chartArea.bottom - chartArea.top;
+        return range <= 0 ? 0 : Math.max( 0, Math.min( 1,
+            ( scale.getPixelForValue( y ) - chartArea.top ) / range
         ) );
     }
 
@@ -142,12 +142,13 @@ class ColorUtils {
         const sortedZones = [ ...zones ].sort( ( a, b ) => b.from - a.from );
 
         sortedZones.forEach( zone => {
-            const color = ColorUtils.rgba( zone.color, zone.opacity ?? fillOpacity );
-            const startPos = ColorUtils.normalizePosition( zone.from, scale, chartArea );
-            const endPos = ColorUtils.normalizePosition( zone.to, scale, chartArea );
+            const start = ColorUtils.normalizePosition( zone.from, scale, chartArea );
+            const end = ColorUtils.normalizePosition( zone.to, scale, chartArea );
+            if ( start === end ) return;
 
-            gradient.addColorStop( startPos, color );
-            gradient.addColorStop( endPos, color );
+            const color = ColorUtils.rgba( zone.color, zone.opacity ?? fillOpacity );
+            gradient.addColorStop( start, color );
+            gradient.addColorStop( end, color );
         } );
 
         return gradient;
