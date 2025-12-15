@@ -327,6 +327,10 @@ export class AreaController extends ChartJS.LineController {
      * Hides all data points by setting their radius to zero.
      */
     private hidePoints () : void {
+        const ds = this.getDataset() as AreaChartDatasetOptions;
+        ds.pointRadius = 0;
+        ds.pointHoverRadius = 0;
+
         const meta = this.getMeta();
         for ( const point of meta.data ?? [] ) {
             point.options.radius = 0;
