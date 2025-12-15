@@ -25,9 +25,6 @@ jobs:
           node-version: 22
           registry-url: 'https://registry.npmjs.org/'
 
-      - name: Clear auth token for OIDC
-        run: echo "NODE_AUTH_TOKEN=" >> $GITHUB_ENV
-
       - name: Install Dependencies
         run:
           npm install -g npm@latest
@@ -37,4 +34,4 @@ jobs:
         run: npm run build
 
       - name: Publish Package to npm
-        run: npm publish
+        run: NODE_AUTH_TOKEN="" npm publish
