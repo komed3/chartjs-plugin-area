@@ -69,6 +69,10 @@ class ColorUtils {
     private static readonly HEX34 = /^#([a-f\d])([a-f\d])([a-f\d])([a-f\d])?$/i;
     private static readonly HEX68 = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i;
 
+    /** Caches for colors and gradients */
+    private static _colorCash: Map< any, string | undefined > = new Map();
+    private static _gradientCash: Map< any, CanvasGradient > = new Map();
+
     /**
      * Parse colors and injects alpha channel into RGB(A) or HSL(A) color strings.
      * @param color - The input color string
@@ -119,13 +123,18 @@ class ColorUtils {
         color: ChartJS.Color,
         alpha: number = 1
     ) : string {
-        if ( typeof color !== 'string' ) return String( color );
-        let res: string | undefined;
-        if ( res = ColorUtils.parseColor( color, 'rgba', ColorUtils.RGB, alpha ) ) return res;
-        if ( res = ColorUtils.parseColor( color, 'hsla', ColorUtils.HSL, alpha ) ) return res;
-        if ( res = ColorUtils.parseColor( color, 'rgba', ColorUtils.HEX34, alpha, true ) ) return res;
-        if ( res = ColorUtils.parseColor( color, 'rgba', ColorUtils.HEX68, alpha, true ) ) return res;
-        return color;
+        const key = `${color}::${alpha}`;
+        if ( ColorUtils._colorCash.has( key ) ) return ColorUtils._colorCash.get( key )!;
+
+        let res: string | undefined = typeof color !== 'string' ? String( color ) :
+            ColorUtils.parseColor( color, 'rgba', ColorUtils.RGB, alpha ) ??
+            ColorUtils.parseColor( color, 'rgba', ColorUtils.HEX68, alpha, true ) ??
+            ColorUtils.parseColor( color, 'rgba', ColorUtils.HEX34, alpha, true ) ??
+            ColorUtils.parseColor( color, 'hsla', ColorUtils.HSL, alpha ) ??
+            color;
+
+        ColorUtils._colorCash.set( key, res );
+        return res;
     }
 
     /**
