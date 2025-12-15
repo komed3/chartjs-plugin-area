@@ -160,8 +160,7 @@ class ColorUtils {
         if ( ColorUtils._gradientCash.has( key ) ) return ColorUtils._gradientCash.get( key )!;
 
         const gradient = ctx.createLinearGradient( 0, top, 0, bottom );
-        const sortedZones = [ ...zones ].sort( ( a, b ) => b.from - a.from );
-        sortedZones.forEach( zone => {
+        [ ...zones ].sort( ( a, b ) => b.from - a.from ).forEach( zone => {
             const { from, to, color, opacity = fillOpacity, fadeTo } = zone;
             const startPos = ColorUtils.normalizePosition( from, scale, top, bottom );
             const endPos = ColorUtils.normalizePosition( to, scale, top, bottom );
