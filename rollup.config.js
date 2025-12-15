@@ -1,4 +1,3 @@
-import cleanup from 'rollup-plugin-cleanup';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import prettier from 'rollup-plugin-prettier';
@@ -36,13 +35,14 @@ export default {
         ]
     } ],
     plugins: [
-        cleanup( {
-            comments: 'istanbul'
-        } ),
         commonjs(),
         resolve(),
         typescript( {
             tsconfig: './tsconfig.json'
+        } ),
+        terser( {
+            format: { comments: false },
+            compress: false
         } ),
         prettier( {
             parser: 'babel',
@@ -52,7 +52,7 @@ export default {
             singleQuote: true,
             jsxSingleQuote: true,
             trailingComma: 'none',
-            objectWrap: 'collapse'
+            objectWrap: 'collapse',
         } )
     ]
 };
