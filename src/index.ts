@@ -12,6 +12,8 @@ export interface AreaChartColorZone {
     color: ChartJS.Color;
     /** Optional opacity for the zone (0-1) */
     opacity?: number;
+    /** Optional color to fade to (for smooth transitions) */
+    fadeTo?: ChartJS.Color;
 }
 
 /**
@@ -133,7 +135,6 @@ class ColorUtils {
      * @param scale - The scale used for value-to-pixel conversion
      * @param zones - Array of zones with from, to, and color
      * @param fillOpacity - Opacity for the fill (0-1)
-     * @param smooth - Whether to smooth transitions between zones
      * @returns The created linear gradient
      */
     public static createMultiBandGradient (
@@ -141,20 +142,20 @@ class ColorUtils {
         chartArea: ChartJS.ChartArea,
         scale: ChartJS.Scale,
         zones: Array< AreaChartColorZone >,
-        fillOpacity: number = 1,
-        smooth: boolean = false
+        fillOpacity: number = 1
     ) : CanvasGradient {
         const gradient = ctx.createLinearGradient( 0, chartArea.top, 0, chartArea.bottom );
         const sortedZones = [ ...zones ].sort( ( a, b ) => b.from - a.from );
-        const last = sortedZones.length - 1;
 
-        sortedZones.forEach( ( z, i ) => {
-            const start = ColorUtils.normalizePosition( z.from, scale, chartArea );
-            const end = ColorUtils.normalizePosition( z.to, scale, chartArea );
-            const color = ColorUtils.color( z.color, z.opacity ?? fillOpacity );
+        sortedZones.forEach( zone => {
+            const { from, to, color, opacity = fillOpacity, fadeTo } = zone;
+            const startPos = ColorUtils.normalizePosition( from, scale, chartArea );
+            const endPos = ColorUtils.normalizePosition( to, scale, chartArea );
+            const startColor = ColorUtils.color( color, opacity );
+            const endColor = fadeTo ? ColorUtils.color( fadeTo, opacity ) : startColor;
 
-            if( ! smooth || i !== last ) gradient.addColorStop( start, color );
-            if( ! smooth || i === last ) gradient.addColorStop( end, color );
+            gradient.addColorStop( startPos, startColor );
+            gradient.addColorStop( endPos, endColor );
         } );
 
         return gradient;
@@ -182,15 +183,17 @@ class ColorUtils {
         thresholdColor?: ChartJS.Color,
         fillOpacity: number = 1
     ) : CanvasGradient {
-        const zones = [
+        const zones: AreaChartColorZone[] = [
             { from: scale.max, to: threshold, color },
             { from: threshold, to: scale.min, color: negativeColor }
         ];
-        if ( thresholdColor ) zones.splice( 1, 0, {
-            from: threshold, to: threshold, color: thresholdColor
-        } );
+        if ( thresholdColor ) {
+            zones[0].fadeTo = thresholdColor;
+            zones[1].color = thresholdColor;
+            zones[1].fadeTo = negativeColor;
+        }
         return ColorUtils.createMultiBandGradient(
-            ctx, chartArea, scale, zones, fillOpacity, thresholdColor != null
+            ctx, chartArea, scale, zones, fillOpacity
         );
     }
 
