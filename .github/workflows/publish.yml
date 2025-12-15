@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
-        with:
-          persist-credentials: false
 
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
@@ -26,9 +24,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org/'
 
       - name: Install Dependencies
-        run:
-          npm install -g npm@latest
-          npm ci --include=dev
+        run: npm ci --include=dev
 
       - name: Build Package
         run: npm run build
