@@ -183,18 +183,10 @@ class ColorUtils {
         thresholdColor?: ChartJS.Color,
         fillOpacity: number = 1
     ) : CanvasGradient {
-        const zones: AreaChartColorZone[] = [
-            { from: scale.max, to: threshold, color },
-            { from: threshold, to: scale.min, color: negativeColor }
-        ];
-        if ( thresholdColor ) {
-            zones[0].fadeTo = thresholdColor;
-            zones[1].color = thresholdColor;
-            zones[1].fadeTo = negativeColor;
-        }
-        return ColorUtils.createMultiBandGradient(
-            ctx, chartArea, scale, zones, fillOpacity
-        );
+        return ColorUtils.createMultiBandGradient( ctx, chartArea, scale, [
+            { from: scale.max, to: threshold, color, fadeTo: thresholdColor },
+            { from: threshold, to: scale.min, color: thresholdColor ?? negativeColor, fadeTo: negativeColor }
+        ], fillOpacity );
     }
 
     /**
