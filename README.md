@@ -61,6 +61,7 @@ const chart = new ChartJS( ctx, {
 - **`to`** `< number >` – Ending value of the zone.
 - **`color`** `< ChartJS.Color >` – Color associated with the zone.
 - **`opacity`** `< number, optional, 0-1 >` – Opacity for the zone.
+- **`fadeTo`** `< ChartJS.Color, optional >` – Color to fade to at the end of the zone.
 
 ### Examples
 
