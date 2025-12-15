@@ -54,7 +54,6 @@ const chart = new ChartJS( ctx, {
 - **`colorPointsByValue`** `< boolean, default: true >` – Color points based on their values.
 - **`pointOpacity`** `< number, 0-1, default: 1 >` – Opacity for data points.
 - **`colorZones`** `< AreaChartColorZone[] >` – Array of color zones for dynamic coloring.
-- **`smoothGradient`** `< boolean, default: false >` – Whether to apply smooth gradient transitions between zones.
 
 **AreaChartColorZone**
 
