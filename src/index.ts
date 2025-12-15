@@ -99,17 +99,19 @@ class ColorUtils {
      * Normalizes position to 0-1 range within chart area.
      * @param y - The data value
      * @param scale - The chart scale
-     * @param chartArea - The chart area
+     * @param top - Top pixel of the chart area
+     * @param bottom - Bottom pixel of the chart area
      * @returns Normalized position (0-1)
      */
     private static normalizePosition (
         y: number,
         scale: ChartJS.Scale,
-        chartArea: ChartJS.ChartArea
+        top: number,
+        bottom: number
     ) : number {
-        const range = chartArea.bottom - chartArea.top;
+        const range = bottom - top;
         return range <= 0 ? 0 : Math.max( 0, Math.min( 1,
-            ( scale.getPixelForValue( y ) - chartArea.top ) / range
+            ( scale.getPixelForValue( y ) - top ) / range
         ) );
     }
 
@@ -153,20 +155,28 @@ class ColorUtils {
         zones: Array< AreaChartColorZone >,
         fillOpacity: number = 1
     ) : CanvasGradient {
-        const gradient = ctx.createLinearGradient( 0, chartArea.top, 0, chartArea.bottom );
-        const sortedZones = [ ...zones ].sort( ( a, b ) => b.from - a.from );
+        const { top, bottom } = chartArea;
+        const key = JSON.stringify( { top, bottom, zones, fillOpacity } );
+        if ( ColorUtils._gradientCash.has( key ) ) return ColorUtils._gradientCash.get( key )!;
 
+        const gradient = ctx.createLinearGradient( 0, top, 0, bottom );
+        const sortedZones = [ ...zones ].sort( ( a, b ) => b.from - a.from );
         sortedZones.forEach( zone => {
             const { from, to, color, opacity = fillOpacity, fadeTo } = zone;
-            const startPos = ColorUtils.normalizePosition( from, scale, chartArea );
-            const endPos = ColorUtils.normalizePosition( to, scale, chartArea );
+            const startPos = ColorUtils.normalizePosition( from, scale, top, bottom );
+            const endPos = ColorUtils.normalizePosition( to, scale, top, bottom );
             const startColor = ColorUtils.color( color, opacity );
             const endColor = fadeTo ? ColorUtils.color( fadeTo, opacity ) : startColor;
 
-            gradient.addColorStop( startPos, startColor );
-            gradient.addColorStop( endPos, endColor );
+            try {
+                gradient.addColorStop( startPos, startColor );
+                gradient.addColorStop( endPos, endColor );
+            } catch ( err ) {
+                console.error( 'Error adding color stop to gradient:', err );
+            }
         } );
 
+        ColorUtils._gradientCash.set( key, gradient );
         return gradient;
     }
 
