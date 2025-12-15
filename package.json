@@ -41,8 +41,7 @@
     }
   },
   "scripts": {
-    "build": "rollup -c",
-    "prepare": "npm run build"
+    "build": "rollup -c"
   },
   "dependencies": {
     "chart.js": "^4.5.1"
