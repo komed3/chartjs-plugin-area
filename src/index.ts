@@ -374,10 +374,10 @@ export class AreaController extends ChartJS.LineController {
             this.applyLineColors( line, ctx, chartArea, scale );
         }
 
-        // Hide points if configured (will remove hover state as well)
-        if ( this.dataset.hidePoints ) this.hidePoints();
         // Apply point colors based on values
-        else if ( this.dataset.colorPointsByValue ) this.applyPointColors();
+        if ( this.dataset.colorPointsByValue ) this.applyPointColors();
+        // Hide points if configured
+        if ( this.dataset.hidePoints ) this.hidePoints();
     }
 
 }
