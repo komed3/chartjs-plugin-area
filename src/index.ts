@@ -383,6 +383,42 @@ export class AreaController extends ChartJS.LineController {
 }
 
 /**
+ * Plugin to fix legend item styles for Area charts.
+ */
+const AreaControllerLegend: ChartJS.Plugin = {
+
+    /** Chart.js plugin identifier */
+    id: 'areaControllerLegend',
+
+    /**
+     * Adjusts legend item styles after chart update to match Area chart styles.
+     * @param chart - The Chart.js chart instance
+     */
+    afterUpdate ( chart: ChartJS.Chart ) : void {
+        const legendItems = chart.legend?.legendItems ?? [];
+        for ( const item of legendItems ) {
+            if ( item.datasetIndex == null ) continue;
+
+            const meta = chart.getDatasetMeta( item.datasetIndex );
+            if ( meta.type !== 'area' ) continue;
+
+            const ds = chart.data.datasets[ item.datasetIndex ] as any;
+            const style = meta.controller.getStyle( 0, false );
+
+            // Apply border style
+            item.strokeStyle = style.borderColor as any;
+            item.lineWidth   = style.borderWidth ?? 2;
+
+            // Apply fill style
+            if ( ds.colorZones?.length ) item.fillStyle = ColorUtils.color( ds.colorZones[ 0 ].color, ds.fillOpacity ?? 0.6 );
+            else if ( ds.color ) item.fillStyle = ColorUtils.color( ds.color, ds.fillOpacity ?? 0.6 );
+            else item.fillStyle = 'transparent';
+        }
+    }
+};
+
+/**
  * Register the AreaController with Chart.js
  */
 ChartJS.registry.addControllers( AreaController );
+ChartJS.registry.addPlugins( AreaControllerLegend );
