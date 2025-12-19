@@ -2,7 +2,7 @@
   "name": "chartjs-plugin-area",
   "description": "Area chart controller for Chart.js with dual-color thresholds and multi-band zones",
   "license": "MIT",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "author": {
     "name": "komed3 (Paul Köhler)",
     "email": "webmaster@komed3.de",
